@@ -26,7 +26,6 @@ struct integral_constant_impl
 using true_type = integral_constant_impl<bool, true>;
 using false_type = integral_constant_impl<bool, false>;
 
-
 // Arithmetic type traits definitions
 template <typename T>
 struct is_arithmetic_impl : false_type
@@ -70,7 +69,6 @@ struct is_arithmetic_impl<unsigned __int128> : true_type
 };
 #endif
 
-
 // Signed and unsigned type traits
 template <typename T, bool = is_arithmetic_impl<T>::value>
 struct is_signed_helper_impl : false_type
@@ -102,7 +100,6 @@ struct is_unsigned_impl : is_unsigned_helper_impl<T>
 {
 };
 
-
 template <typename T, typename U>
 struct is_same_impl : false_type
 {
@@ -112,8 +109,6 @@ template <typename T>
 struct is_same_impl<T, T> : true_type
 {
 };
-
-
 
 template <typename T>
 struct is_array_impl : false_type
@@ -195,7 +190,6 @@ struct is_function_impl<const volatile Ret(Args...) &&> : true_type
 {
 };
 
-
 template <typename T>
 struct is_pointer_impl : false_type
 {
@@ -210,7 +204,6 @@ template <typename T>
 struct is_pointer_impl<const T*> : true_type
 {
 };
-
 
 template <typename T>
 struct is_lvalue_reference_impl : false_type
@@ -232,7 +225,6 @@ struct is_rvalue_reference_impl<T&&> : true_type
 {
 };
 
-
 template <typename T>
 struct is_member_function_pointer_impl : false_type
 {
@@ -242,7 +234,6 @@ template <typename T, typename U>
 struct is_member_function_pointer_impl<T U::*> : integral_constant_impl<bool, is_function_impl<T>::value>
 {
 };
-
 
 template <typename T>
 struct is_const_impl : false_type
@@ -264,7 +255,6 @@ struct is_volatile_impl<volatile T> : true_type
 {
 };
 
-
 template <typename T>
 struct is_reference_impl : false_type
 {
@@ -280,7 +270,6 @@ struct is_reference_impl<T&&> : true_type
 {
 };
 
-
 template <typename T>
 struct add_rvalue_reference_impl
 {
@@ -289,7 +278,6 @@ struct add_rvalue_reference_impl
 
 template <typename T>
 typename add_rvalue_reference_impl<T>::type declval() noexcept;
-
 
 template <typename Void, typename Callable, typename... Args>
 struct invoke_result_impl
@@ -301,7 +289,6 @@ struct invoke_result_impl<decltype(void(declval<Callable>()(declval<Args>()...))
 {
     using type = decltype(declval<Callable>()(declval<Args>()...));
 };
-
 
 template <size_t Index, typename... Types>
 struct get_type_impl
@@ -326,7 +313,6 @@ struct get_type_impl<0, First, Rest...>
 
 namespace meta
 {
-
 template <typename T>
 struct add_rvalue_reference : detail::add_rvalue_reference_impl<T>
 {
@@ -335,12 +321,10 @@ struct add_rvalue_reference : detail::add_rvalue_reference_impl<T>
 template <typename T>
 typename add_rvalue_reference<T>::type declval() noexcept;
 
-
 template <typename T>
 struct is_arithmetic : detail::is_arithmetic_impl<T>
 {
 };
-
 
 template <typename T>
 struct is_signed : detail::is_signed_impl<T>
@@ -352,12 +336,10 @@ struct is_unsigned : detail::is_unsigned_impl<T>
 {
 };
 
-
 template <typename T, typename U>
 struct is_same : detail::is_same_impl<T, U>
 {
 };
-
 
 template <typename T>
 struct is_array : detail::is_array_impl<T>
@@ -374,7 +356,6 @@ struct is_pointer : detail::is_pointer_impl<T>
 {
 };
 
-
 template <typename T>
 struct is_lvalue_reference : detail::is_lvalue_reference_impl<T>
 {
@@ -384,7 +365,6 @@ template <typename T>
 struct is_rvalue_reference : detail::is_rvalue_reference_impl<T>
 {
 };
-
 
 template <typename T>
 struct is_member_function_pointer : detail::is_member_function_pointer_impl<T>
@@ -396,18 +376,15 @@ struct is_const : detail::is_const_impl<T>
 {
 };
 
-
 template <typename T>
 struct is_volatile : detail::is_volatile_impl<T>
 {
 };
 
-
 template <typename T>
 struct is_reference : detail::is_reference_impl<T>
 {
 };
-
 
 template <typename Callable, typename... Args>
 struct invoke_result : detail::invoke_result_impl<void, Callable, Args...>
@@ -417,7 +394,6 @@ struct invoke_result : detail::invoke_result_impl<void, Callable, Args...>
 template <typename Callable, typename... Args>
 using invoke_result_t = typename invoke_result<Callable, Args...>::type;
 
-
 template <size_t Index, typename... Types>
 struct get_type : detail::get_type_impl<Index, Types...>
 {
@@ -425,7 +401,6 @@ struct get_type : detail::get_type_impl<Index, Types...>
 
 template <size_t Index, typename... Types>
 using get_type_t = typename get_type<Index, Types...>::type;
-
 
 }  // namespace meta
 
