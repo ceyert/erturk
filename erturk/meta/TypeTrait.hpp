@@ -70,6 +70,38 @@ struct is_arithmetic_impl<unsigned __int128> : true_type
 };
 #endif
 
+
+// Signed and unsigned type traits
+template <typename T, bool = is_arithmetic_impl<T>::value>
+struct is_signed_helper_impl : false_type
+{
+};
+
+template <typename T>
+struct is_signed_helper_impl<T, true> : integral_constant_impl<bool, T(-1) < T(0)>
+{
+};
+
+template <typename T>
+struct is_signed_impl : is_signed_helper_impl<T>
+{
+};
+
+template <typename T, bool = is_arithmetic_impl<T>::value>
+struct is_unsigned_helper_impl : false_type
+{
+};
+
+template <typename T>
+struct is_unsigned_helper_impl<T, true> : integral_constant_impl<bool, T(0) < T(-1)>
+{
+};
+
+template <typename T>
+struct is_unsigned_impl : is_unsigned_helper_impl<T>
+{
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -79,6 +111,17 @@ namespace meta
 
 template <typename T>
 struct is_arithmetic : detail::is_arithmetic_impl<T>
+{
+};
+
+
+template <typename T>
+struct is_signed : detail::is_signed_impl<T>
+{
+};
+
+template <typename T>
+struct is_unsigned : detail::is_unsigned_impl<T>
 {
 };
 
