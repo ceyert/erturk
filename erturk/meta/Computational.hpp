@@ -223,6 +223,22 @@ struct sqrt_impl<N, M, M>
 };
 
 
+template <int... Ns>
+struct sum_impl;
+
+template <int First, int... Rest>
+struct sum_impl<First, Rest...>
+{
+    static const constexpr int value = First + sum_impl<Rest...>::value;
+};
+
+template <>
+struct sum_impl<>
+{
+    static const constexpr int value = 0;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -331,6 +347,11 @@ struct sqrt : detail::sqrt_impl<N, lo, hi>
 {
 };
 
+
+template <int... Ns>
+struct sum : detail::sum_impl<Ns...>
+{
+};
 
 }  // namespace computational
 }  // namespace erturk
