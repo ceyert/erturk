@@ -303,6 +303,23 @@ struct invoke_result_impl<decltype(void(declval<Callable>()(declval<Args>()...))
 };
 
 
+template <size_t Index, typename... Types>
+struct get_type_impl
+{
+};
+
+template <size_t Index, typename First, typename... Rest>
+struct get_type_impl<Index, First, Rest...>
+{
+    using type = typename get_type_impl<Index - 1, Rest...>::type;
+};
+
+template <typename First, typename... Rest>
+struct get_type_impl<0, First, Rest...>
+{
+    using type = First;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -399,6 +416,15 @@ struct invoke_result : detail::invoke_result_impl<void, Callable, Args...>
 
 template <typename Callable, typename... Args>
 using invoke_result_t = typename invoke_result<Callable, Args...>::type;
+
+
+template <size_t Index, typename... Types>
+struct get_type : detail::get_type_impl<Index, Types...>
+{
+};
+
+template <size_t Index, typename... Types>
+using get_type_t = typename get_type<Index, Types...>::type;
 
 
 }  // namespace meta
