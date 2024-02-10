@@ -119,6 +119,18 @@ struct if_impl<false, TrueType, FalseType>
 };
 
 
+template <typename A, typename B>
+struct max_type_impl
+{
+    typedef typename if_impl<(A::value > B::value), A, B>::type type;
+};
+
+template <typename A, typename B>
+struct min_type_impl
+{
+    typedef typename if_impl<(A::value > B::value), B, A>::type type;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -163,6 +175,16 @@ struct if_ : detail::if_impl<Condition, TrueType, FalseType>
 {
 };
 
+
+template <typename A, typename B>
+struct max_type : detail::max_type_impl<A, B>
+{
+};
+
+template <typename A, typename B>
+struct min_type : detail::min_type_impl<A, B>
+{
+};
 
 
 }  // namespace computational
