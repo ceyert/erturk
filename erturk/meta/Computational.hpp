@@ -131,6 +131,13 @@ struct min_type_impl
     typedef typename if_impl<(A::value > B::value), B, A>::type type;
 };
 
+
+template <typename... Types>
+struct types_sequence_impl
+{
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -183,6 +190,12 @@ struct max_type : detail::max_type_impl<A, B>
 
 template <typename A, typename B>
 struct min_type : detail::min_type_impl<A, B>
+{
+};
+
+
+template <typename... Types>
+struct types_sequence : detail::types_sequence_impl<Types...>
 {
 };
 
