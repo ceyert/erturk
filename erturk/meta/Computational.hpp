@@ -48,6 +48,26 @@ struct fibonacci_impl<1>
     static const constexpr unsigned int value = 1;
 };
 
+
+template <unsigned int A, unsigned int B>
+struct gcd_impl
+{
+    static const constexpr unsigned int value = gcd_impl<B, A % B>::value;
+};
+
+template <unsigned int A>
+struct gcd_impl<A, 0>
+{
+    static const constexpr unsigned int value = A;
+};
+
+template <unsigned int A, unsigned int B>
+struct lcm_impl
+{
+    static const constexpr unsigned int value = (A / gcd_impl<A, B>::value) * B;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -60,6 +80,17 @@ struct factorial : detail::factorial_impl<N>
 
 template <unsigned int N>
 struct fibonacci : detail::fibonacci_impl<N>
+{
+};
+
+
+template <unsigned int A, unsigned int B>
+struct gcd : detail::gcd_impl<A, B>
+{
+};
+
+template <unsigned int A, unsigned int B>
+struct lcm : detail::lcm_impl<A, B>
 {
 };
 
