@@ -77,6 +77,10 @@ struct is_arithmetic_impl<unsigned __int128> : true_type
 namespace meta
 {
 
+template <typename T>
+struct is_arithmetic : detail::is_arithmetic_impl<T>
+{
+};
 
 }  // namespace meta
 
