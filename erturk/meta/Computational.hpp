@@ -259,6 +259,33 @@ struct static_for_impl<0, F>
 };
 
 
+template <int... Ns>
+struct seq_
+{
+};
+
+template <typename Seq, int N>
+struct prepend_;
+
+template <int... Ns, int Last>
+struct prepend_<seq_<Ns...>, Last>
+{
+    using type = seq_<Last, Ns...>;
+};
+
+template <int N, int... Ns>
+struct reverse_seq_impl
+{
+    using type = typename prepend_<typename reverse_seq_impl<N - 1, Ns...>::type, N>::type;
+};
+
+template <int... Ns>
+struct reverse_seq_impl<0, Ns...>
+{
+    using type = detail::seq_<0, Ns...>;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -376,6 +403,12 @@ struct sum : detail::sum_impl<Ns...>
 
 template <int N, template <int> class F>
 struct static_for : detail::static_for_impl<N, F>
+{
+};
+
+
+template <int N, int... Ns>
+struct reverse_seq : detail::reverse_seq_impl<N, Ns...>
 {
 };
 
