@@ -80,6 +80,32 @@ struct multiplies_impl
     typedef int_<A * B> type;
 };
 
+
+template <int N, int I = 2>
+struct is_prime_impl
+{
+    static const constexpr bool value = (I * I > N) ? true : ((N % I) && is_prime_impl<N, I + 1>::value);
+};
+
+template <int N>
+struct is_prime_impl<N, N>
+{
+    static const constexpr bool value = true;
+};
+
+template <>
+struct is_prime_impl<0, 2>
+{
+    static const constexpr bool value = false;
+};
+
+template <>
+struct is_prime_impl<1, 2>
+{
+    static const constexpr bool value = false;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -110,6 +136,14 @@ template <int A, int B>
 struct multiplies : detail::multiplies_impl<A, B>
 {
 };
+
+
+// Might hit the template instantiation depth limit for larger numbers.
+template <int N, int I = 2>
+struct is_prime : detail::is_prime_impl<N, I>
+{
+};
+
 
 }  // namespace computational
 }  // namespace erturk
