@@ -286,6 +286,22 @@ struct reverse_seq_impl<0, Ns...>
 };
 
 
+template <template <int> class Pred, int... Ns>
+struct all_of_impl;
+
+template <template <int> class Pred, int First, int... Rest>
+struct all_of_impl<Pred, First, Rest...>
+{
+    static const constexpr bool value = Pred<First>::value && all_of_impl<Pred, Rest...>::value;
+};
+
+template <template <int> class Pred>
+struct all_of_impl<Pred>
+{
+    static const constexpr bool value = true;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -411,6 +427,13 @@ template <int N, int... Ns>
 struct reverse_seq : detail::reverse_seq_impl<N, Ns...>
 {
 };
+
+
+template <template <int> class Pred, int... Ns>
+struct all_of : detail::all_of_impl<Pred, Ns...>
+{
+};
+
 
 
 }  // namespace computational
