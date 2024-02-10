@@ -29,13 +29,6 @@ struct fibonacci_impl
     static const constexpr unsigned int value = fibonacci_impl<N - 1>::value + fibonacci_impl<N - 2>::value;
 };
 
-
-template <unsigned int N>
-struct fibonacci_impl
-{
-    static const constexpr unsigned int value = fibonacci_impl<N - 1>::value + fibonacci_impl<N - 2>::value;
-};
-
 template <>
 struct fibonacci_impl<0>
 {  // Specialization for N = 0
@@ -47,7 +40,6 @@ struct fibonacci_impl<1>
 {  // Specialization for N = 1
     static const constexpr unsigned int value = 1;
 };
-
 
 template <unsigned int A, unsigned int B>
 struct gcd_impl
@@ -67,7 +59,6 @@ struct lcm_impl
     static const constexpr unsigned int value = (A / gcd_impl<A, B>::value) * B;
 };
 
-
 template <int N>
 struct int_
 {
@@ -79,7 +70,6 @@ struct multiplies_impl
 {
     typedef int_<A * B> type;
 };
-
 
 template <int N, int I = 2>
 struct is_prime_impl
@@ -105,7 +95,6 @@ struct is_prime_impl<1, 2>
     static const constexpr bool value = false;
 };
 
-
 template <bool Condition, typename TrueType, typename FalseType>
 struct if_impl
 {
@@ -117,7 +106,6 @@ struct if_impl<false, TrueType, FalseType>
 {
     typedef FalseType type;
 };
-
 
 template <typename A, typename B>
 struct max_type_impl
@@ -131,12 +119,10 @@ struct min_type_impl
     typedef typename if_impl<(A::value > B::value), B, A>::type type;
 };
 
-
 template <typename... Types>
 struct types_sequence_impl
 {
 };
-
 
 template <typename TList>
 struct length_impl;
@@ -147,7 +133,6 @@ struct length_impl<types_sequence_impl<Types...>>
     static const constexpr size_t value = sizeof...(Types);
 };
 
-
 template <typename TList, typename T>
 struct append_impl;
 
@@ -156,7 +141,6 @@ struct append_impl<types_sequence_impl<Types...>, T>
 {
     typedef types_sequence_impl<Types..., T> type;
 };
-
 
 template <unsigned int base, unsigned int exponent>
 struct power_impl
@@ -170,13 +154,11 @@ struct power_impl<base, 0>
     static const constexpr unsigned int value = 1;
 };
 
-
 template <unsigned int N>
 struct is_power_of_two_impl
 {
     static const constexpr bool value = N && !(N & (N - 1));
 };
-
 
 template <int N, int... List>
 struct contains_impl;
@@ -193,7 +175,6 @@ struct contains_impl<N>
     static const constexpr bool value = false;
 };
 
-
 template <int N>
 struct is_even_impl
 {
@@ -205,7 +186,6 @@ struct is_odd_impl
 {
     static const constexpr bool value = !is_even_impl<N>::value;
 };
-
 
 template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
 struct sqrt_impl
@@ -222,7 +202,6 @@ struct sqrt_impl<N, M, M>
     static const constexpr unsigned long value = M;
 };
 
-
 template <int... Ns>
 struct sum_impl;
 
@@ -237,7 +216,6 @@ struct sum_impl<>
 {
     static const constexpr int value = 0;
 };
-
 
 template <int N, template <int> class F>
 struct static_for_impl
@@ -257,7 +235,6 @@ struct static_for_impl<0, F>
         F<0>::execute();
     }
 };
-
 
 template <int... Ns>
 struct seq_
@@ -285,7 +262,6 @@ struct reverse_seq_impl<0, Ns...>
     using type = detail::seq_<0, Ns...>;
 };
 
-
 template <template <int> class Pred, int... Ns>
 struct all_of_impl;
 
@@ -301,7 +277,6 @@ struct all_of_impl<Pred>
     static const constexpr bool value = true;
 };
 
-
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -311,12 +286,10 @@ struct factorial : detail::factorial_impl<N>
 {
 };
 
-
 template <unsigned int N>
 struct fibonacci : detail::fibonacci_impl<N>
 {
 };
-
 
 template <unsigned int A, unsigned int B>
 struct gcd : detail::gcd_impl<A, B>
@@ -333,19 +306,16 @@ struct multiplies : detail::multiplies_impl<A, B>
 {
 };
 
-
 // Might hit the template instantiation depth limit for larger numbers.
 template <int N, int I = 2>
 struct is_prime : detail::is_prime_impl<N, I>
 {
 };
 
-
 template <bool Condition, typename TrueType, typename FalseType>
 struct if_ : detail::if_impl<Condition, TrueType, FalseType>
 {
 };
-
 
 template <typename A, typename B>
 struct max_type : detail::max_type_impl<A, B>
@@ -357,42 +327,41 @@ struct min_type : detail::min_type_impl<A, B>
 {
 };
 
-
 template <typename... Types>
 struct types_sequence : detail::types_sequence_impl<Types...>
 {
 };
-
 
 template <typename TList>
 struct length : detail::length_impl<TList>
 {
 };
 
-
 template <typename TList, typename T>
 struct append : detail::append_impl<TList, T>
 {
 };
 
+template <typename... Types, typename T>
+struct append<types_sequence<Types...>, T>
+{
+    typedef types_sequence<Types..., T> type;
+};
 
 template <unsigned int base, unsigned int exponent>
 struct power : detail::power_impl<base, exponent>
 {
 };
 
-
 template <unsigned int N>
 struct is_power_of_two : detail::is_power_of_two_impl<N>
 {
 };
 
-
 template <int N, int... List>
 struct contains : detail::contains_impl<N, List...>
 {
 };
-
 
 template <int N>
 struct is_even : detail::is_even_impl<N>
@@ -404,37 +373,30 @@ struct is_odd : detail::is_odd_impl<N>
 {
 };
 
-
 template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
 struct sqrt : detail::sqrt_impl<N, lo, hi>
 {
 };
-
 
 template <int... Ns>
 struct sum : detail::sum_impl<Ns...>
 {
 };
 
-
 template <int N, template <int> class F>
 struct static_for : detail::static_for_impl<N, F>
 {
 };
-
 
 template <int N, int... Ns>
 struct reverse_seq : detail::reverse_seq_impl<N, Ns...>
 {
 };
 
-
 template <template <int> class Pred, int... Ns>
 struct all_of : detail::all_of_impl<Pred, Ns...>
 {
 };
-
-
 
 }  // namespace computational
 }  // namespace erturk
