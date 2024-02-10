@@ -177,6 +177,22 @@ struct is_power_of_two_impl
     static const constexpr bool value = N && !(N & (N - 1));
 };
 
+
+template <int N, int... List>
+struct contains_impl;
+
+template <int N, int First, int... Rest>
+struct contains_impl<N, First, Rest...>
+{
+    static const constexpr bool value = (N == First) || contains_impl<N, Rest...>::value;
+};
+
+template <int N>
+struct contains_impl<N>
+{
+    static const constexpr bool value = false;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -259,6 +275,12 @@ struct power : detail::power_impl<base, exponent>
 
 template <unsigned int N>
 struct is_power_of_two : detail::is_power_of_two_impl<N>
+{
+};
+
+
+template <int N, int... List>
+struct contains : detail::contains_impl<N, List...>
 {
 };
 
