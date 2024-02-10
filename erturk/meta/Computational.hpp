@@ -147,6 +147,16 @@ struct length_impl<types_sequence_impl<Types...>>
     static const constexpr size_t value = sizeof...(Types);
 };
 
+
+template <typename TList, typename T>
+struct append_impl;
+
+template <typename... Types, typename T>
+struct append_impl<types_sequence_impl<Types...>, T>
+{
+    typedef types_sequence_impl<Types..., T> type;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -211,6 +221,12 @@ struct types_sequence : detail::types_sequence_impl<Types...>
 
 template <typename TList>
 struct length : detail::length_impl<TList>
+{
+};
+
+
+template <typename TList, typename T>
+struct append : detail::append_impl<TList, T>
 {
 };
 
