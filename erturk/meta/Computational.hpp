@@ -138,6 +138,15 @@ struct types_sequence_impl
 };
 
 
+template <typename TList>
+struct length_impl;
+
+template <typename... Types>
+struct length_impl<types_sequence_impl<Types...>>
+{
+    static const constexpr size_t value = sizeof...(Types);
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -199,6 +208,11 @@ struct types_sequence : detail::types_sequence_impl<Types...>
 {
 };
 
+
+template <typename TList>
+struct length : detail::length_impl<TList>
+{
+};
 
 }  // namespace computational
 }  // namespace erturk
