@@ -170,6 +170,13 @@ struct power_impl<base, 0>
     static const constexpr unsigned int value = 1;
 };
 
+
+template <unsigned int N>
+struct is_power_of_two_impl
+{
+    static const constexpr bool value = N && !(N & (N - 1));
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -246,6 +253,12 @@ struct append : detail::append_impl<TList, T>
 
 template <unsigned int base, unsigned int exponent>
 struct power : detail::power_impl<base, exponent>
+{
+};
+
+
+template <unsigned int N>
+struct is_power_of_two : detail::is_power_of_two_impl<N>
 {
 };
 
