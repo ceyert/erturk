@@ -212,6 +212,39 @@ struct is_pointer_impl<const T*> : true_type
 };
 
 
+template <typename T>
+struct is_lvalue_reference_impl : false_type
+{
+};
+
+template <typename T>
+struct is_lvalue_reference_impl<T&> : true_type
+{
+};
+
+template <typename T>
+struct is_rvalue_reference_impl : false_type
+{
+};
+
+template <typename T>
+struct is_rvalue_reference_impl<T&&> : true_type
+{
+};
+
+
+template <typename T>
+struct is_member_function_pointer_impl : false_type
+{
+};
+
+template <typename T, typename U>
+struct is_member_function_pointer_impl<T U::*> : integral_constant_impl<bool, is_function_impl<T>::value>
+{
+};
+
+
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -256,6 +289,25 @@ template <typename T>
 struct is_pointer : detail::is_pointer_impl<T>
 {
 };
+
+
+template <typename T>
+struct is_lvalue_reference : detail::is_lvalue_reference_impl<T>
+{
+};
+
+template <typename T>
+struct is_rvalue_reference : detail::is_rvalue_reference_impl<T>
+{
+};
+
+
+template <typename T>
+struct is_member_function_pointer : detail::is_member_function_pointer_impl<T>
+{
+};
+
+
 
 }  // namespace meta
 
