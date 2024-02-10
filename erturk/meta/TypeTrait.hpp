@@ -130,6 +130,71 @@ struct is_array_impl<T[N]> : true_type
 {
 };
 
+template <typename T>
+struct is_function_impl : false_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<Ret(Args...)> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const Ret(Args...)> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<volatile Ret(Args...)> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const volatile Ret(Args...)> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<Ret(Args...)&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const Ret(Args...)&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<volatile Ret(Args...)&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const volatile Ret(Args...)&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<Ret(Args...) &&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const Ret(Args...) &&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<volatile Ret(Args...) &&> : true_type
+{
+};
+
+template <typename Ret, typename... Args>
+struct is_function_impl<const volatile Ret(Args...) &&> : true_type
+{
+};
+
 
 
 }  // namespace detail
@@ -164,6 +229,11 @@ struct is_same : detail::is_same_impl<T, U>
 
 template <typename T>
 struct is_array : detail::is_array_impl<T>
+{
+};
+
+template <typename T>
+struct is_function : detail::is_function_impl<T>
 {
 };
 
