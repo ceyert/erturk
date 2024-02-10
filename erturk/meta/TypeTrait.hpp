@@ -266,6 +266,22 @@ struct is_volatile_impl<volatile T> : true_type
 
 
 template <typename T>
+struct is_reference_impl : false_type
+{
+};
+
+template <typename T>
+struct is_reference_impl<T&> : true_type
+{
+};
+
+template <typename T>
+struct is_reference_impl<T&&> : true_type
+{
+};
+
+
+template <typename T>
 struct add_rvalue_reference_impl
 {
     using type = T&&;
@@ -274,6 +290,17 @@ struct add_rvalue_reference_impl
 template <typename T>
 typename add_rvalue_reference_impl<T>::type declval() noexcept;
 
+
+template <typename Void, typename Callable, typename... Args>
+struct invoke_result_impl
+{
+};
+
+template <typename Callable, typename... Args>
+struct invoke_result_impl<decltype(void(declval<Callable>()(declval<Args>()...))), Callable, Args...>
+{
+    using type = decltype(declval<Callable>()(declval<Args>()...));
+};
 
 
 }  // namespace detail
@@ -358,6 +385,20 @@ struct is_volatile : detail::is_volatile_impl<T>
 {
 };
 
+
+template <typename T>
+struct is_reference : detail::is_reference_impl<T>
+{
+};
+
+
+template <typename Callable, typename... Args>
+struct invoke_result : detail::invoke_result_impl<void, Callable, Args...>
+{
+};
+
+template <typename Callable, typename... Args>
+using invoke_result_t = typename invoke_result<Callable, Args...>::type;
 
 
 }  // namespace meta
