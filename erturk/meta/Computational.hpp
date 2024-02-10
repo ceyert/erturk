@@ -157,6 +157,19 @@ struct append_impl<types_sequence_impl<Types...>, T>
     typedef types_sequence_impl<Types..., T> type;
 };
 
+
+template <unsigned int base, unsigned int exponent>
+struct power_impl
+{
+    static const constexpr unsigned int value = base * power_impl<base, exponent - 1>::value;
+};
+
+template <unsigned int base>
+struct power_impl<base, 0>
+{
+    static const constexpr unsigned int value = 1;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -227,6 +240,12 @@ struct length : detail::length_impl<TList>
 
 template <typename TList, typename T>
 struct append : detail::append_impl<TList, T>
+{
+};
+
+
+template <unsigned int base, unsigned int exponent>
+struct power : detail::power_impl<base, exponent>
 {
 };
 
