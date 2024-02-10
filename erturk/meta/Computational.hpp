@@ -193,6 +193,19 @@ struct contains_impl<N>
     static const constexpr bool value = false;
 };
 
+
+template <int N>
+struct is_even_impl
+{
+    static const constexpr bool value = N % 2 == 0;
+};
+
+template <int N>
+struct is_odd_impl
+{
+    static const constexpr bool value = !is_even_impl<N>::value;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -283,6 +296,18 @@ template <int N, int... List>
 struct contains : detail::contains_impl<N, List...>
 {
 };
+
+
+template <int N>
+struct is_even : detail::is_even_impl<N>
+{
+};
+
+template <int N>
+struct is_odd : detail::is_odd_impl<N>
+{
+};
+
 
 }  // namespace computational
 }  // namespace erturk
