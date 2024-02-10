@@ -244,6 +244,26 @@ struct is_member_function_pointer_impl<T U::*> : integral_constant_impl<bool, is
 };
 
 
+template <typename T>
+struct is_const_impl : false_type
+{
+};
+
+template <typename T>
+struct is_const_impl<const T> : true_type
+{
+};
+
+template <typename T>
+struct is_volatile_impl : false_type
+{
+};
+
+template <typename T>
+struct is_volatile_impl<volatile T> : true_type
+{
+};
+
 
 }  // namespace detail
 
@@ -304,6 +324,17 @@ struct is_rvalue_reference : detail::is_rvalue_reference_impl<T>
 
 template <typename T>
 struct is_member_function_pointer : detail::is_member_function_pointer_impl<T>
+{
+};
+
+template <typename T>
+struct is_const : detail::is_const_impl<T>
+{
+};
+
+
+template <typename T>
+struct is_volatile : detail::is_volatile_impl<T>
 {
 };
 
