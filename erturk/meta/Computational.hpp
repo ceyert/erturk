@@ -68,6 +68,18 @@ struct lcm_impl
 };
 
 
+template <int N>
+struct int_
+{
+    static const constexpr int value = N;
+};
+
+template <int A, int B>
+struct multiplies_impl
+{
+    typedef int_<A * B> type;
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -91,6 +103,11 @@ struct gcd : detail::gcd_impl<A, B>
 
 template <unsigned int A, unsigned int B>
 struct lcm : detail::lcm_impl<A, B>
+{
+};
+
+template <int A, int B>
+struct multiplies : detail::multiplies_impl<A, B>
 {
 };
 
