@@ -1,2 +1,2 @@
 # erturk
-Generalist C++ library
+General purposed C++ library
