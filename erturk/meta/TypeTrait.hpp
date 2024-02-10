@@ -196,6 +196,21 @@ struct is_function_impl<const volatile Ret(Args...) &&> : true_type
 };
 
 
+template <typename T>
+struct is_pointer_impl : false_type
+{
+};
+
+template <typename T>
+struct is_pointer_impl<T*> : true_type
+{
+};
+
+template <typename T>
+struct is_pointer_impl<const T*> : true_type
+{
+};
+
 
 }  // namespace detail
 
@@ -234,6 +249,11 @@ struct is_array : detail::is_array_impl<T>
 
 template <typename T>
 struct is_function : detail::is_function_impl<T>
+{
+};
+
+template <typename T>
+struct is_pointer : detail::is_pointer_impl<T>
 {
 };
 
