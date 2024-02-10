@@ -239,6 +239,26 @@ struct sum_impl<>
 };
 
 
+template <int N, template <int> class F>
+struct static_for_impl
+{
+    static void execute()
+    {
+        F<N>::execute();
+        static_for_impl<N - 1, F>::execute();
+    }
+};
+
+template <template <int> class F>
+struct static_for_impl<0, F>
+{
+    static void execute()
+    {
+        F<0>::execute();
+    }
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -352,6 +372,13 @@ template <int... Ns>
 struct sum : detail::sum_impl<Ns...>
 {
 };
+
+
+template <int N, template <int> class F>
+struct static_for : detail::static_for_impl<N, F>
+{
+};
+
 
 }  // namespace computational
 }  // namespace erturk
