@@ -106,6 +106,19 @@ struct is_prime_impl<1, 2>
 };
 
 
+template <bool Condition, typename TrueType, typename FalseType>
+struct if_impl
+{
+    typedef TrueType type;
+};
+
+template <typename TrueType, typename FalseType>
+struct if_impl<false, TrueType, FalseType>
+{
+    typedef FalseType type;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -143,6 +156,13 @@ template <int N, int I = 2>
 struct is_prime : detail::is_prime_impl<N, I>
 {
 };
+
+
+template <bool Condition, typename TrueType, typename FalseType>
+struct if_ : detail::if_impl<Condition, TrueType, FalseType>
+{
+};
+
 
 
 }  // namespace computational
