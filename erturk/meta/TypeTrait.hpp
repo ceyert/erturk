@@ -102,6 +102,18 @@ struct is_unsigned_impl : is_unsigned_helper_impl<T>
 {
 };
 
+
+template <typename T, typename U>
+struct is_same_impl : false_type
+{
+};
+
+template <typename T>
+struct is_same_impl<T, T> : true_type
+{
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -122,6 +134,12 @@ struct is_signed : detail::is_signed_impl<T>
 
 template <typename T>
 struct is_unsigned : detail::is_unsigned_impl<T>
+{
+};
+
+
+template <typename T, typename U>
+struct is_same : detail::is_same_impl<T, U>
 {
 };
 
