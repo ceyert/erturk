@@ -114,6 +114,24 @@ struct is_same_impl<T, T> : true_type
 };
 
 
+
+template <typename T>
+struct is_array_impl : false_type
+{
+};
+
+template <typename T>
+struct is_array_impl<T[]> : true_type
+{
+};
+
+template <typename T, size_t N>
+struct is_array_impl<T[N]> : true_type
+{
+};
+
+
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -140,6 +158,12 @@ struct is_unsigned : detail::is_unsigned_impl<T>
 
 template <typename T, typename U>
 struct is_same : detail::is_same_impl<T, U>
+{
+};
+
+
+template <typename T>
+struct is_array : detail::is_array_impl<T>
 {
 };
 
