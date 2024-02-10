@@ -206,6 +206,23 @@ struct is_odd_impl
     static const constexpr bool value = !is_even_impl<N>::value;
 };
 
+
+template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
+struct sqrt_impl
+{
+    static const constexpr unsigned long mid = (lo + hi + 1) / 2;
+
+    static const constexpr unsigned long value =
+        (mid * mid > N) ? sqrt_impl<N, lo, mid - 1>::value : sqrt_impl<N, mid, hi>::value;
+};
+
+template <unsigned long N, unsigned long M>
+struct sqrt_impl<N, M, M>
+{
+    static const constexpr unsigned long value = M;
+};
+
+
 }  // namespace detail
 
 // ************************************************************************************************************
@@ -305,6 +322,12 @@ struct is_even : detail::is_even_impl<N>
 
 template <int N>
 struct is_odd : detail::is_odd_impl<N>
+{
+};
+
+
+template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
+struct sqrt : detail::sqrt_impl<N, lo, hi>
 {
 };
 
