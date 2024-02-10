@@ -265,12 +265,32 @@ struct is_volatile_impl<volatile T> : true_type
 };
 
 
+template <typename T>
+struct add_rvalue_reference_impl
+{
+    using type = T&&;
+};
+
+template <typename T>
+typename add_rvalue_reference_impl<T>::type declval() noexcept;
+
+
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
 
 namespace meta
 {
+
+template <typename T>
+struct add_rvalue_reference : detail::add_rvalue_reference_impl<T>
+{
+};
+
+template <typename T>
+typename add_rvalue_reference<T>::type declval() noexcept;
+
 
 template <typename T>
 struct is_arithmetic : detail::is_arithmetic_impl<T>
