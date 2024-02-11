@@ -178,6 +178,31 @@ inline void simdSort(float* data)
     _mm_storeu_ps(&data[4], max);
 }
 
+inline void simdBubbleSort(float* data, size_t size)
+{
+    bool swapped;
+    do
+    {
+        swapped = false;
+        for (size_t i = 0; i < size - 4; i += 4)
+        {
+            __m128 a = _mm_loadu_ps(&data[i]);
+            __m128 b = _mm_loadu_ps(&data[i + 4]);
+
+            __m128 min = _mm_min_ps(a, b);
+            __m128 max = _mm_max_ps(a, b);
+
+            _mm_storeu_ps(&data[i], min);
+            _mm_storeu_ps(&data[i + 4], max);
+
+            if (!_mm_comieq_ss(a, min))
+            {
+                swapped = true;
+            }
+        }
+    } while (swapped);
+}
+
 }  // namespace simd
 }  // namespace erturk
 
