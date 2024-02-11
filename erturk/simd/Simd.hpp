@@ -62,6 +62,17 @@ inline void subtractFloatsSSE(float* a, float* b, float* result, int n)
     }
 }
 
+inline void subtractFloatsAVX(float* a, float* b, float* result, int n)
+{
+    for (int i = 0; i < n; i += 8)
+    {
+        __m256 aVec = _mm256_loadu_ps(&a[i]);
+        __m256 bVec = _mm256_loadu_ps(&b[i]);
+        __m256 resultVec = _mm256_sub_ps(aVec, bVec);
+        _mm256_storeu_ps(&result[i], resultVec);
+    }
+}
+
 }  // namespace simd
 }  // namespace erturk
 
