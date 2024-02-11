@@ -183,6 +183,13 @@ inline T atomic_fetch_and_add(T* ptr, T val)
     return original;  // Returns the original value before the add
 }
 
+inline bool atomic_test_and_set(bool* ptr)
+{
+    bool oldValue = true;
+    __asm__ __volatile__("xchgb %0, %1" : "=r"(oldValue), "+m"(*ptr) : "0"(oldValue) : "cc", "memory");
+    return oldValue;
+}
+
 
 }  // namespace atomic
 }  // namespace erturk
