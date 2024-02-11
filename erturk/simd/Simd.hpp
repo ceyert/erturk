@@ -164,6 +164,20 @@ inline void maxElementsAVX(const float* a, const float* b, float* result, int n)
     }
 }
 
+inline void simdSort(float* data)
+{
+    __m128 a = _mm_loadu_ps(&data[0]);  // Load 4 floats
+    __m128 b = _mm_loadu_ps(&data[4]);  // Load next 4 floats
+
+    // Sort the vectors
+    __m128 min = _mm_min_ps(a, b);
+    __m128 max = _mm_max_ps(a, b);
+
+    // Store the results back into the array
+    _mm_storeu_ps(&data[0], min);
+    _mm_storeu_ps(&data[4], max);
+}
+
 }  // namespace simd
 }  // namespace erturk
 
