@@ -95,6 +95,7 @@ public:
         return fetch_and_add(-1);
     }
 
+    // Modified load and store with explicit fences for demonstration
     T load_acquire() const
     {
         T val;
@@ -107,6 +108,7 @@ public:
 
     void store_release(T newVal)
     {
+        // Issue a store fence before the store to ensure release semantics
         store_fence();
         value = newVal;
     }
@@ -382,7 +384,6 @@ inline void atomic_increment(T* ptr)
     }
 }
 
-
 template <typename T>
 inline void atomic_decrement(T* ptr)
 {
@@ -398,7 +399,6 @@ inline void atomic_decrement(T* ptr)
         __asm__ __volatile__("lock decq %0" : "+m"(*ptr)::"cc", "memory");
     }
 }
-
 
 template <typename T>
 inline void atomic_add(T* ptr, T val)
@@ -419,7 +419,6 @@ inline void atomic_add(T* ptr, T val)
     }
 }
 
-
 template <typename T>
 inline void atomic_subtract(T* ptr, T val)
 {
@@ -435,7 +434,6 @@ inline void atomic_subtract(T* ptr, T val)
         __asm__ __volatile__("lock subq %1, %0" : "+m"(*ptr) : "ir"(val) : "cc", "memory");
     }
 }
-
 
 template <typename T>
 inline T atomic_exchange(T* ptr, T newVal)
@@ -455,7 +453,6 @@ inline T atomic_exchange(T* ptr, T newVal)
     }
     return oldVal;
 }
-
 
 template <typename T>
 inline bool atomic_compare_and_exchange_strong(T* ptr, T& expected, T desired)
@@ -482,7 +479,6 @@ inline bool atomic_compare_and_exchange_strong(T* ptr, T& expected, T desired)
     return success;
 }
 
-
 template <typename T>
 inline bool atomic_compare_and_exchange_weak(T* ptr, T& expected, T desired)
 {
@@ -496,7 +492,6 @@ inline bool atomic_compare_and_swap(T* ptr, T oldVal, T newVal)
     // Atomic Compare and Swap - Convenience wrapper around compare and exchange strong
     return atomic_compare_and_exchange_strong(ptr, oldVal, newVal);
 }
-
 
 template <typename T>
 inline T atomic_fetch_and_add(T* ptr, T val)
