@@ -148,6 +148,17 @@ inline bool atomic_compare_and_exchange_strong(T* ptr, T& expected, T desired)
     return success;
 }
 
+
+template <typename T>
+inline bool atomic_compare_and_exchange_weak(T* ptr, T& expected, T desired)
+{
+    // Directly use the strong variant as weak offers no advantage on x86/x86_64
+    return atomic_compare_and_exchange_strong(ptr, expected, desired);
+}
+
+
+
+
 }  // namespace atomic
 }  // namespace erturk
 
