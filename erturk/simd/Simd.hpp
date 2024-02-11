@@ -84,6 +84,16 @@ inline void divideFloatsSSE(float* a, float* b, float* result, int n)
     }
 }
 
+inline void reciprocalFloatsAVX(float* a, float* result, int n)
+{
+    for (int i = 0; i < n; i += 8)
+    {
+        __m256 aVec = _mm256_loadu_ps(&a[i]);
+        __m256 resultVec = _mm256_rcp_ps(aVec);
+        _mm256_storeu_ps(&result[i], resultVec);
+    }
+}
+
 
 }  // namespace simd
 }  // namespace erturk
