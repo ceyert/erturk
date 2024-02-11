@@ -22,6 +22,16 @@ typedef enum class memory_order
 } memory_order;
 
 
+/*
+"memory" clobber tells the compiler not to reorder the atomic operation relative to other memory operations, which is essential for maintaining memory order semantics.
+
+Including "cc" in the clobber list for operations that affect flags (like inc and dec) to indicate that the condition codes may be altered by the instruction.
+*/
+
+// "lock" and "xchg" inherently enforce strong memory ordering on x86/x86_64.
+// "lock" and "xchg" instruction behavior are specific to x86/x86_64 and ensure atomicity and a memory barrier.
+
+
 }  // namespace atomic
 }  // namespace erturk
 
