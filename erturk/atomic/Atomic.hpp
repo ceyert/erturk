@@ -31,6 +31,20 @@ Including "cc" in the clobber list for operations that affect flags (like inc an
 // "lock" and "xchg" inherently enforce strong memory ordering on x86/x86_64.
 // "lock" and "xchg" instruction behavior are specific to x86/x86_64 and ensure atomicity and a memory barrier.
 
+inline void full_memory_fence()
+{
+    __asm__ __volatile__("mfence" ::: "memory");
+}
+
+inline void store_fence()
+{
+    __asm__ __volatile__("sfence" ::: "memory");
+}
+
+inline void load_fence()
+{
+    __asm__ __volatile__("lfence" ::: "memory");
+}
 
 template <typename T>
 inline void atomic_increment(T* ptr)
