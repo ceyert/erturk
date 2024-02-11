@@ -153,6 +153,17 @@ inline void addVectorsSSE(const float* a, const float* b, float* result, int n)
     }
 }
 
+inline void maxElementsAVX(const float* a, const float* b, float* result, int n)
+{
+    for (int i = 0; i < n; i += 8)
+    {
+        __m256 aVec = _mm256_loadu_ps(&a[i]);
+        __m256 bVec = _mm256_loadu_ps(&b[i]);
+        __m256 maxVec = _mm256_max_ps(aVec, bVec);
+        _mm256_storeu_ps(&result[i], maxVec);
+    }
+}
+
 }  // namespace simd
 }  // namespace erturk
 
