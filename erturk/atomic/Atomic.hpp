@@ -3,6 +3,9 @@
 
 #if defined(__x86_64__) || defined(__i386__)
 
+#include "erturk/meta/TypeTrait.hpp"
+#include <cstdint>
+
 namespace erturk
 {
 namespace atomic
