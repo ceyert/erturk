@@ -122,6 +122,32 @@ inline T atomic_exchange(T* ptr, T newVal)
     return oldVal;
 }
 
+
+template <typename T>
+inline bool atomic_compare_and_exchange_strong(T* ptr, T& expected, T desired)
+{
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8, "Unsupported operand size for atomic operations.");
+    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+
+    unsigned char success;
+
+    if (sizeof(T) == sizeof(int32_t))
+    {
+        __asm__ __volatile__("lock cmpxchgl %2, %1"
+                             : "=q"(success), "+m"(*ptr), "+a"(expected)
+                             : "r"(desired)
+                             : "cc", "memory");
+    }
+    else if (sizeof(T) == sizeof(int64_t))
+    {
+        __asm__ __volatile__("lock cmpxchgq %2, %1"
+                             : "=q"(success), "+m"(*ptr), "+a"(expected)
+                             : "r"(desired)
+                             : "cc", "memory");
+    }
+    return success;
+}
+
 }  // namespace atomic
 }  // namespace erturk
 
