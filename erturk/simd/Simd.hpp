@@ -105,6 +105,25 @@ inline void minElementsSSE(const float* a, const float* b, float* result, int n)
     }
 }
 
+inline float dotProductAVX(const float* a, const float* b, int n)
+{
+    __m256 sumVec = _mm256_setzero_ps();
+    for (int i = 0; i < n; i += 8)
+    {
+        __m256 aVec = _mm256_loadu_ps(&a[i]);
+        __m256 bVec = _mm256_loadu_ps(&b[i]);
+        __m256 multVec = _mm256_mul_ps(aVec, bVec);
+        sumVec = _mm256_add_ps(sumVec, multVec);
+    }
+    float sumArray[8];
+    _mm256_storeu_ps(sumArray, sumVec);
+    float dotProduct = 0;
+    for (int i = 0; i < 8; ++i)
+    {
+        dotProduct += sumArray[i];
+    }
+    return dotProduct;
+}
 
 }  // namespace simd
 }  // namespace erturk
