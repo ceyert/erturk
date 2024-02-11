@@ -125,6 +125,23 @@ inline float dotProductAVX(const float* a, const float* b, int n)
     return dotProduct;
 }
 
+inline float dotProductSSE(const float* a, const float* b, const int n)
+{
+    __m128 sum = _mm_setzero_ps();
+
+    for (int i = 0; i < n; i += 4)
+    {
+        __m128 a_chunk = _mm_loadu_ps(&a[i]);
+        __m128 b_chunk = _mm_loadu_ps(&b[i]);
+        __m128 prod = _mm_mul_ps(a_chunk, b_chunk);
+        sum = _mm_add_ps(sum, prod);
+    }
+
+    float result[4];
+    _mm_storeu_ps(result, sum);
+    return result[0] + result[1] + result[2] + result[3];
+}
+
 }  // namespace simd
 }  // namespace erturk
 
