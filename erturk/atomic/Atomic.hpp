@@ -156,7 +156,12 @@ inline bool atomic_compare_and_exchange_weak(T* ptr, T& expected, T desired)
     return atomic_compare_and_exchange_strong(ptr, expected, desired);
 }
 
-
+template <typename T>
+inline bool atomic_compare_and_swap(T* ptr, T oldVal, T newVal)
+{
+    // Atomic Compare and Swap - Convenience wrapper around compare and exchange strong
+    return atomic_compare_and_exchange_strong(ptr, oldVal, newVal);
+}
 
 
 }  // namespace atomic
