@@ -164,6 +164,26 @@ inline bool atomic_compare_and_swap(T* ptr, T oldVal, T newVal)
 }
 
 
+template <typename T>
+inline T atomic_fetch_and_add(T* ptr, T val)
+{
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8, "Unsupported operand size for atomic operations.");
+    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+
+    T original = val;
+
+    if (sizeof(T) == sizeof(int32_t))
+    {
+        __asm__ __volatile__("lock xaddl %0, %1" : "+r"(original), "+m"(*ptr) : : "cc", "memory");
+    }
+    else if (sizeof(T) == sizeof(int64_t))
+    {
+        __asm__ __volatile__("lock xaddq %0, %1" : "+r"(original), "+m"(*ptr) : : "cc", "memory");
+    }
+    return original;  // Returns the original value before the add
+}
+
+
 }  // namespace atomic
 }  // namespace erturk
 
