@@ -203,6 +203,24 @@ inline void simdBubbleSort(float* data, size_t size)
     } while (swapped);
 }
 
+void matrixMultiplySSE(float* a, float* b, float* result, int rows, int cols)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j += 4)
+        {
+            __m128 sum = _mm_setzero_ps();
+            for (int k = 0; k < cols; k++)
+            {
+                __m128 a_chunk = _mm_set1_ps(a[i * cols + k]);
+                __m128 b_chunk = _mm_loadu_ps(&b[k * cols + j]);
+                sum = _mm_add_ps(sum, _mm_mul_ps(a_chunk, b_chunk));
+            }
+            _mm_storeu_ps(&result[i * cols + j], sum);
+        }
+    }
+}
+
 }  // namespace simd
 }  // namespace erturk
 
