@@ -103,6 +103,25 @@ inline void atomic_subtract(T* ptr, T val)
 }
 
 
+template <typename T>
+inline T atomic_exchange(T* ptr, T newVal)
+{
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8, "Unsupported operand size for atomic operations.");
+    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+
+    T oldVal;
+
+    if (sizeof(T) == sizeof(int32_t))
+    {
+        __asm__ __volatile__("xchgl %0, %1" : "=r"(oldVal), "+m"(*ptr) : "0"(newVal) : "memory");
+    }
+    else if (sizeof(T) == sizeof(int64_t))
+    {
+        __asm__ __volatile__("xchgq %0, %1" : "=r"(oldVal), "+m"(*ptr) : "0"(newVal) : "memory");
+    }
+    return oldVal;
+}
+
 }  // namespace atomic
 }  // namespace erturk
 
