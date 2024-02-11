@@ -18,6 +18,17 @@ namespace erturk
 namespace simd
 {
 
+inline void addFloatsSSE(float* a, float* b, float* result, int n)
+{
+    for (int i = 0; i < n; i += 4)
+    {
+        __m128 aVec = _mm_loadu_ps(&a[i]);
+        __m128 bVec = _mm_loadu_ps(&b[i]);
+        __m128 resultVec = _mm_add_ps(aVec, bVec);
+        _mm_storeu_ps(&result[i], resultVec);
+    }
+}
+
 
 }  // namespace simd
 }  // namespace erturk
