@@ -65,6 +65,26 @@ inline void atomic_decrement(T* ptr)
     }
 }
 
+
+template <typename T>
+inline void atomic_add(T* ptr, T val)
+{
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8, "Unsupported operand size for atomic operations.");
+    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+
+    if (sizeof(T) == sizeof(int32_t))
+    {
+        __asm__ __volatile__("lock addl %1, %0"
+                             : "+m"(*ptr)
+                             : "ir"(val)
+                             : "cc", "memory");  // 'add' affects flags, so 'cc' is appropriate.
+    }
+    else if (sizeof(T) == sizeof(int64_t))
+    {
+        __asm__ __volatile__("lock addq %1, %0" : "+m"(*ptr) : "ir"(val) : "cc", "memory");
+    }
+}
+
 }  // namespace atomic
 }  // namespace erturk
 
