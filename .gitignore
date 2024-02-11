@@ -1,0 +1,9 @@
+# JetBrains IDE (CLion) artifacts
+.idea/
+
+# VS code artifacts
+.code/
+
+# In-source cmake build output directories
+build*
+cmake-build*
