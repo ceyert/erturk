@@ -32,6 +32,23 @@ Including "cc" in the clobber list for operations that affect flags (like inc an
 // "lock" and "xchg" instruction behavior are specific to x86/x86_64 and ensure atomicity and a memory barrier.
 
 
+template <typename T>
+inline void atomic_increment(T* ptr)
+{
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8, "Unsupported operand size for atomic operations.");
+    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+
+    if (sizeof(T) == sizeof(int32_t))
+    {
+        __asm__ __volatile__("lock incl %0" : "+m"(*ptr)::"cc", "memory");
+    }
+    else if (sizeof(T) == sizeof(int64_t))
+    {
+        __asm__ __volatile__("lock incq %0" : "+m"(*ptr)::"cc", "memory");
+    }
+}
+
+
 }  // namespace atomic
 }  // namespace erturk
 
