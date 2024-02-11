@@ -95,24 +95,6 @@ public:
         return fetch_and_add(-1);
     }
 
-    // Modified load and store with explicit fences for demonstration
-    T load_acquire() const
-    {
-        T val;
-        // Load the value
-        val = value;
-        // Followed by a load fence to ensure acquire semantics
-        load_fence();
-        return val;
-    }
-
-    void store_release(T newVal)
-    {
-        // Issue a store fence before the store to ensure release semantics
-        store_fence();
-        value = newVal;
-    }
-
     T fetch_and_add(T val, memory_order order = memory_order::memory_order_seq_cst)
     {
         T original = val;
@@ -186,6 +168,7 @@ public:
         {
             case memory_order::memory_order_relaxed:
                 // A relaxed load might simply move the value without additional barriers.
+                apply_memory_fence(memory_order::memory_order_relaxed);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value));
@@ -199,6 +182,7 @@ public:
             case memory_order::memory_order_acquire:
                 // Acquire semantics can be ensured by a subsequent barrier.
                 // x86 loads have implicit acquire semantics, but we include a compiler barrier for illustration.
+                apply_memory_fence(memory_order::memory_order_acquire);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value) : "memory");
@@ -211,7 +195,7 @@ public:
             default:
                 // Sequentially consistent load requires a full fence before the load.
                 // x86's strong model makes this mostly unnecessary, but we include it for completeness.
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value) : "memory");
@@ -220,7 +204,7 @@ public:
                 {
                     __asm__ __volatile__("movq %1, %0" : "=r"(val) : "m"(value) : "memory");
                 }
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 break;
         }
         return val;
@@ -244,7 +228,7 @@ public:
             case memory_order::memory_order_release:
                 // Release semantics can be ensured by a barrier before the store.
                 // x86 stores have implicit release semantics, but we include a compiler barrier for illustration.
-                store_fence();
+                apply_memory_fence(memory_order::memory_order_release);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("movl %1, %0" : "=m"(value) : "ri"(newVal));
@@ -257,7 +241,7 @@ public:
             default:
                 // Sequentially consistent store requires a full fence after the store.
                 // Again, x86's model makes this mostly unnecessary, but included for completeness.
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("movl %1, %0" : "=m"(value) : "ri"(newVal) : "memory");
@@ -266,7 +250,7 @@ public:
                 {
                     __asm__ __volatile__("movq %1, %0" : "=m"(value) : "ri"(newVal) : "memory");
                 }
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 break;
         }
     }
@@ -294,7 +278,7 @@ public:
                 // Since `xchg` inherently acts as a full barrier on x86,
                 // these cases don't differ in implementation. However, explicit barriers
                 // are added for illustration aligned with memory order semantics.
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_acq_rel);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("xchgl %0, %1" : "=r"(oldVal), "+m"(value) : "0"(newVal) : "memory");
@@ -303,13 +287,13 @@ public:
                 {
                     __asm__ __volatile__("xchgq %0, %1" : "=r"(oldVal), "+m"(value) : "0"(newVal) : "memory");
                 }
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_acq_rel);
                 break;
             case memory_order::memory_order_seq_cst:
             default:
                 // Sequential consistency is naturally ensured by the `xchg` operation's
                 // implicit lock behavior, but we include a fence for explicitness.
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 if (sizeof(T) == 4)
                 {
                     __asm__ __volatile__("xchgl %0, %1" : "=r"(oldVal), "+m"(value) : "0"(newVal) : "memory");
@@ -318,26 +302,56 @@ public:
                 {
                     __asm__ __volatile__("xchgq %0, %1" : "=r"(oldVal), "+m"(value) : "0"(newVal) : "memory");
                 }
-                full_memory_fence();
+                apply_memory_fence(memory_order::memory_order_seq_cst);
                 break;
         }
         return oldVal;
     }
 
 private:
-    static void full_memory_fence()
+    static void apply_memory_fence(memory_order order)
     {
-        __asm__ __volatile__("mfence" ::: "memory");
-    }
-
-    static void store_fence()
-    {
-        __asm__ __volatile__("sfence" ::: "memory");
-    }
-
-    static void load_fence()
-    {
-        __asm__ __volatile__("lfence" ::: "memory");
+        switch (order)
+        {
+            case memory_order::memory_order_relaxed:
+                // No fence is required for relaxed memory order operations.
+                // This explicitly states the intention for documentation and clarity,
+                // even though the case does nothing.
+                break;
+            case memory_order::memory_order_consume:
+                // Historically, 'consume' semantics could be differentiated from 'acquire',
+                // but in practice, it's often treated as 'acquire' due to the difficulty
+                // in correctly implementing 'consume' semantics in compilers.
+                // Thus, using lfence for consume as well, even though hardware might not distinguish.
+                __asm__ __volatile__("lfence" ::: "memory");
+                break;
+            case memory_order::memory_order_acquire:
+                // Ensures that all reads/writes issued after the fence will be executed
+                // after reads/writes before the fence.
+                __asm__ __volatile__("lfence" ::: "memory");
+                break;
+            case memory_order::memory_order_release:
+                // Ensures that all reads/writes issued before the fence will be executed
+                // before reads/writes after the fence.
+                __asm__ __volatile__("sfence" ::: "memory");
+                break;
+            case memory_order::memory_order_acq_rel:
+                // Combines the effects of both acquire and release barriers.
+                // mfence is used here because it provides a full barrier,
+                // ensuring both acquire and release semantics.
+                __asm__ __volatile__("mfence" ::: "memory");
+                break;
+            case memory_order::memory_order_seq_cst:
+                // Provides a full barrier, ensuring total order with respect to all
+                // other sequentially consistent operations.
+                __asm__ __volatile__("mfence" ::: "memory");
+                break;
+            default:
+                // Ideally, all cases should be covered, and default should not be reached.
+                // A full fence is used as a safety precaution.
+                __asm__ __volatile__("mfence" ::: "memory");
+                break;
+        }
     }
 
 private:
@@ -345,27 +359,59 @@ private:
 };
 
 /*
-"memory" clobber tells the compiler not to reorder the atomic operation relative to other memory operations, which is essential for maintaining memory order semantics.
+"memory" clobber tells the compiler not to reorder the atomic operation relative to other memory operations, which is
+essential for maintaining memory order semantics.
 
-Including "cc" in the clobber list for operations that affect flags (like inc and dec) to indicate that the condition codes may be altered by the instruction.
+Including "cc" in the clobber list for operations that affect flags (like inc and dec) to indicate that the condition
+codes may be altered by the instruction.
 */
 
 // "lock" and "xchg" inherently enforce strong memory ordering on x86/x86_64.
 // "lock" and "xchg" instruction behavior are specific to x86/x86_64 and ensure atomicity and a memory barrier.
 
-inline void full_memory_fence()
+inline void apply_memory_fence(memory_order order)
 {
-    __asm__ __volatile__("mfence" ::: "memory");
-}
-
-inline void store_fence()
-{
-    __asm__ __volatile__("sfence" ::: "memory");
-}
-
-inline void load_fence()
-{
-    __asm__ __volatile__("lfence" ::: "memory");
+    switch (order)
+    {
+        case memory_order::memory_order_relaxed:
+            // No fence is required for relaxed memory order operations.
+            // This explicitly states the intention for documentation and clarity,
+            // even though the case does nothing.
+            break;
+        case memory_order::memory_order_consume:
+            // Historically, 'consume' semantics could be differentiated from 'acquire',
+            // but in practice, it's often treated as 'acquire' due to the difficulty
+            // in correctly implementing 'consume' semantics in compilers.
+            // Thus, using lfence for consume as well, even though hardware might not distinguish.
+            __asm__ __volatile__("lfence" ::: "memory");
+            break;
+        case memory_order::memory_order_acquire:
+            // Ensures that all reads/writes issued after the fence will be executed
+            // after reads/writes before the fence.
+            __asm__ __volatile__("lfence" ::: "memory");
+            break;
+        case memory_order::memory_order_release:
+            // Ensures that all reads/writes issued before the fence will be executed
+            // before reads/writes after the fence.
+            __asm__ __volatile__("sfence" ::: "memory");
+            break;
+        case memory_order::memory_order_acq_rel:
+            // Combines the effects of both acquire and release barriers.
+            // mfence is used here because it provides a full barrier,
+            // ensuring both acquire and release semantics.
+            __asm__ __volatile__("mfence" ::: "memory");
+            break;
+        case memory_order::memory_order_seq_cst:
+            // Provides a full barrier, ensuring total order with respect to all
+            // other sequentially consistent operations.
+            __asm__ __volatile__("mfence" ::: "memory");
+            break;
+        default:
+            // Ideally, all cases should be covered, and default should not be reached.
+            // A full fence is used as a safety precaution.
+            __asm__ __volatile__("mfence" ::: "memory");
+            break;
+    }
 }
 
 template <typename T>
@@ -518,7 +564,6 @@ inline bool atomic_test_and_set(bool* ptr)
     __asm__ __volatile__("xchgb %0, %1" : "=r"(oldValue), "+m"(*ptr) : "0"(oldValue) : "cc", "memory");
     return oldValue;
 }
-
 
 }  // namespace atomic
 }  // namespace erturk
