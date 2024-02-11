@@ -457,7 +457,7 @@ inline void atomic_add(T* ptr, T val)
         __asm__ __volatile__("lock addl %1, %0"
                              : "+m"(*ptr)
                              : "ir"(val)
-                             : "cc", "memory");  // 'add' affects flags, so 'cc' is appropriate.
+                             : "cc", "memory"); 
     }
     else if (sizeof(T) == sizeof(int64_t))
     {
@@ -473,7 +473,7 @@ inline void atomic_subtract(T* ptr, T val)
 
     if (sizeof(T) == sizeof(int32_t))
     {
-        __asm__ __volatile__("lock subl %1, %0" : "+m"(*ptr) : "ir"(val) : "cc", "memory");  // 'sub' affects flags.
+        __asm__ __volatile__("lock subl %1, %0" : "+m"(*ptr) : "ir"(val) : "cc", "memory"); 
     }
     else if (sizeof(T) == sizeof(int64_t))
     {
