@@ -307,6 +307,18 @@ struct get_type_impl<0, First, Rest...>
     using type = First;
 };
 
+// Trivial type trait using GCC built-in
+template <typename T>
+struct is_trivial_impl : integral_constant_impl<bool, __is_trivial(T)>
+{
+};
+
+// Trivially copyable type trait using GCC built-in
+template <typename T>
+struct is_trivially_copyable_impl : integral_constant_impl<bool, __is_trivially_copyable(T)>
+{
+};
+
 }  // namespace detail
 
 // ************************************************************************************************************************************
@@ -401,6 +413,16 @@ struct get_type : detail::get_type_impl<Index, Types...>
 
 template <size_t Index, typename... Types>
 using get_type_t = typename get_type<Index, Types...>::type;
+
+template <typename T>
+struct is_trivial : detail::is_trivial_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_copyable : detail::is_trivially_copyable_impl<T>
+{
+};
 
 }  // namespace meta
 
