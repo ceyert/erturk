@@ -63,7 +63,30 @@ namespace erturk {
         };
 #endif
 
-// Signed and unsigned type traits
+        template<bool B, typename T, typename F>
+        struct conditional_impl;
+
+        template<typename T, typename F>
+        struct conditional_impl<true, T, F> {
+            typedef T type;
+        };
+
+        template<typename T, typename F>
+        struct conditional_impl<false, T, F> {
+            typedef F type;
+        };
+        
+        template<bool B, typename T>
+        struct enableif_impl;
+
+                
+        template<typename T>
+        struct enableif_impl<true, T>
+        {
+              typedef T type;
+        };
+
+        // Signed and unsigned type traits
         template<typename T, bool = is_arithmetic_impl<T>::value>
         struct is_signed_helper_impl : false_type {
         };
@@ -255,7 +278,7 @@ namespace erturk {
             using type = First;
         };
 
-// Use GCC built-in type traits
+        // Use GCC built-in type traits
         template<typename T>
         struct has_nothrow_assign_impl : integral_constant_impl<bool, __has_nothrow_assign(T)> {
         };
@@ -297,6 +320,15 @@ namespace erturk {
 // ************************************************************************************************************************************
 
     namespace meta {
+
+        template<bool B, typename T, typename F>
+        struct conditional : detail::conditional_impl<B, T, F> {
+        };
+
+        template<bool B, typename T>
+        struct enableif : detail::enableif_impl<B, T> {
+        };
+
         template<typename T>
         struct add_rvalue_reference : detail::add_rvalue_reference_impl<T> {
         };
