@@ -172,7 +172,7 @@ struct contains_impl<N, First, Rest...>
 template <int N>
 struct contains_impl<N>
 {
-    static const constexpr bool value = false;
+    static const constexpr bool value = false; // end of list reached, return false
 };
 
 template <int N>
@@ -187,13 +187,13 @@ struct is_odd_impl
     static const constexpr bool value = !is_even_impl<N>::value;
 };
 
-template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
+template <unsigned long N, unsigned long left, unsigned long right>
 struct sqrt_impl
 {
-    static const constexpr unsigned long mid = (lo + hi + 1) / 2;
+    static const constexpr unsigned long mid = (left + right + 1) / 2;
 
     static const constexpr unsigned long value =
-        (mid * mid > N) ? sqrt_impl<N, lo, mid - 1>::value : sqrt_impl<N, mid, hi>::value;
+        (mid * mid > N) ? sqrt_impl<N, left, mid - 1>::value : sqrt_impl<N, mid, right>::value;
 };
 
 template <unsigned long N, unsigned long M>
@@ -208,13 +208,13 @@ struct sum_impl;
 template <int First, int... Rest>
 struct sum_impl<First, Rest...>
 {
-    static const constexpr int value = First + sum_impl<Rest...>::value;
+    static const constexpr long double value = First + sum_impl<Rest...>::value;
 };
 
 template <>
 struct sum_impl<>
 {
-    static const constexpr int value = 0;
+    static const constexpr int value = 0; // end of list reached, add 0
 };
 
 template <int N, template <int> class F>
@@ -373,8 +373,8 @@ struct is_odd : detail::is_odd_impl<N>
 {
 };
 
-template <unsigned long N, unsigned long lo = 1, unsigned long hi = N>
-struct sqrt : detail::sqrt_impl<N, lo, hi>
+template <unsigned long N>
+struct sqrt : detail::sqrt_impl<N, 1, N>
 {
 };
 

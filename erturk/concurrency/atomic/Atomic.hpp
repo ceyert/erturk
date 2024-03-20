@@ -3,7 +3,7 @@
 
 #if defined(__x86_64__) || defined(__i386__)
 
-#include "erturk/meta/TypeTrait.hpp"
+#include "../../meta_types/TypeTrait.hpp"
 #include <cstdint>
 
 namespace erturk
@@ -25,7 +25,7 @@ template <typename T>
 class Atomic
 {
 public:
-    static_assert(erturk::meta::is_arithmetic<T>::value, "Atomic only supports integral types.");
+    static_assert(erturk::meta::is_trivial<T>::value, "Atomic only supports integral types.");
 
     explicit constexpr Atomic(T initialValue = T{}) : value(initialValue) {}
 
@@ -61,7 +61,7 @@ public:
         }
     }
 
-    void add(T& val)
+    void add(T val)
     {
         if (sizeof(T) == 4)
         {
@@ -73,7 +73,7 @@ public:
         }
     }
 
-    void subtract(T& val)
+    void subtract(T val)
     {
         if (sizeof(T) == 4)
         {
@@ -210,7 +210,7 @@ public:
         return val;
     }
 
-    void store(T& newVal, memory_order order = memory_order::memory_order_seq_cst)
+    void store(T newVal, memory_order order = memory_order::memory_order_seq_cst)
     {
         switch (order)
         {

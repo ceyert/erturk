@@ -1,1 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
+
+add_subdirectory(atomic)
+add_subdirectory(coordination)
+add_subdirectory(dispatcher)
+add_subdirectory(execution)
+add_subdirectory(execution_switcher)
+add_subdirectory(lock)
+add_subdirectory(lock_free)
+add_subdirectory(memory_reclemation)
+add_subdirectory(per_thread_distribution)
+add_subdirectory(thread_memory_allocator)
