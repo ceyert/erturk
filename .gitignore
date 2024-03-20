@@ -3,6 +3,7 @@
 
 # VS code artifacts
 .code/
+.vscode/
 
 # In-source cmake build output directories
 build*

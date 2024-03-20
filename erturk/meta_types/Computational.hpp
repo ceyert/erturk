@@ -110,13 +110,13 @@ struct if_impl<false, TrueType, FalseType>
 template <typename A, typename B>
 struct max_type_impl
 {
-    typedef typename if_impl<(A::value > B::value), A, B>::type type;
+    typedef typename if_impl<(A{} > B{}), A, B>::type type;
 };
 
 template <typename A, typename B>
 struct min_type_impl
 {
-    typedef typename if_impl<(A::value > B::value), B, A>::type type;
+    typedef typename if_impl<(A{} > B{}), B, A>::type type;
 };
 
 template <typename... Types>
@@ -124,11 +124,8 @@ struct types_sequence_impl
 {
 };
 
-template <typename TList>
-struct length_impl;
-
 template <typename... Types>
-struct length_impl<types_sequence_impl<Types...>>
+struct length_impl
 {
     static const constexpr size_t value = sizeof...(Types);
 };
@@ -332,8 +329,8 @@ struct types_sequence : detail::types_sequence_impl<Types...>
 {
 };
 
-template <typename TList>
-struct length : detail::length_impl<TList>
+template <typename... Types>
+struct length : detail::length_impl<Types...>
 {
 };
 
