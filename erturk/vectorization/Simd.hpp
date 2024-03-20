@@ -164,18 +164,26 @@ inline void maxElementsAVX(const float* a, const float* b, float* result, int n)
     }
 }
 
-inline void simdSort(float* data)
+void simdChunkedSort(float* data, size_t size)
 {
-    __m128 a = _mm_loadu_ps(&data[0]);  // Load 4 floats
-    __m128 b = _mm_loadu_ps(&data[4]);  // Load next 4 floats
+    // Ensure we have at least 8 floats
+    if (size < 8) return;
 
-    // Sort the vectors
-    __m128 min = _mm_min_ps(a, b);
-    __m128 max = _mm_max_ps(a, b);
+    // Iterate over the array in steps of 8 elements
+    for (size_t i = 0; i < size - 4; i += 4)
+    {
+        // Load two adjacent blocks of 4 floats
+        __m128 a = _mm_loadu_ps(&data[i]);
+        __m128 b = _mm_loadu_ps(&data[i + 4]);
 
-    // Store the results back into the array
-    _mm_storeu_ps(&data[0], min);
-    _mm_storeu_ps(&data[4], max);
+        // Sort the blocks
+        __m128 min = _mm_min_ps(a, b);
+        __m128 max = _mm_max_ps(a, b);
+
+        // Store the sorted blocks back
+        _mm_storeu_ps(&data[i], min);
+        _mm_storeu_ps(&data[i + 4], max);
+    }
 }
 
 inline void simdBubbleSort(float* data, size_t size)
