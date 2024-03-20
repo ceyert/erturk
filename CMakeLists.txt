@@ -27,6 +27,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF) # This line is optional and ensures -std=c++14 instead of -std=gnu++14
 
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+        message(FATAL_ERROR "GCC version should be at least 5.1")
+    endif()
+else()
+    message(WARNING "You are using a non-GCC compiler for C++14.")
+endif()
+
+
 if (NOT CONAN_EXPORTED)
     include(conan)
 
