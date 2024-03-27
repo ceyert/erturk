@@ -1,5 +1,6 @@
 
 #include "../../erturk/meta_types/Computational.hpp"
+#include "../../erturk/meta_types/Sequential.hpp"
 #include "../../erturk/meta_types/TypeTrait.hpp"
 #include <iostream>
 
@@ -68,6 +69,20 @@ int main()
         std::cout << "Square root of 16: " << erturk::computational::sqrt<16>::value << std::endl;
 
         std::cout << "Sum of 1, 2, 3, 4: " << erturk::computational::sum<1, 2, 3, 4>::value << std::endl;
+    }
+
+    // ***************************************************************************************************
+
+    {
+        erturk::sequential::index_sequence_t<1, 2, 3> idxSeq{};
+
+        erturk::sequential::integer_sequence_t<std::size_t, 0, 1, 2> seq1 =
+            erturk::sequential::make_integer_sequence<std::size_t, 3>{};
+
+        erturk::sequential::integer_sequence_t<int, 0, 1, 2> seq2 = erturk::sequential::make_integer_sequence<int, 3>{};
+
+        erturk::sequential::integer_sequence_t<long, 0, 1, 2> seq3 =
+            erturk::sequential::make_integer_sequence<long, 3>{};
     }
 
     return 0;
