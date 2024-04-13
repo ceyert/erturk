@@ -17,15 +17,19 @@ public:
         static_assert(sizeof...(Args) == SIZE, "Number of arguments does not match array size.");
     }
 
-    template <typename... Args>
-    constexpr Array(const std::initializer_list<T>& initList, Args... args) : buffer_{T{args}...}
+    constexpr Array(const T& val)
     {
-        static_assert(initList.size() <= SIZE, "Initializer list size exceeds array size.");
-
-        std::size_t index = 0;
-        for (const T& value : initList)
+        for (std::size_t i = 0; i < SIZE; i++)
         {
-            buffer_[index++] = value;
+            buffer_[i] = val;
+        }
+    }
+
+    constexpr Array(T&& val)
+    {
+        for (std::size_t i = 0; i < SIZE; i++)
+        {
+            buffer_[i] = std::move(val);
         }
     }
 
@@ -55,6 +59,11 @@ public:
 
     void fill(const T& value, T* start, T* end)
     {
+        if (start < buffer_ || end > buffer_ + SIZE)
+        {
+            throw std::out_of_range("Fill range out of buffer bounds");
+        }
+
         while (start != end)
         {
             *start++ = value;
