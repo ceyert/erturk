@@ -11,6 +11,14 @@ template <typename T, const std::size_t SIZE>
 class Array
 {
 public:
+    constexpr Array()
+    {
+        for (std::size_t i = 0; i < SIZE; i++)
+        {
+            buffer_[i] = T{};
+        }
+    }
+
     template <typename... Args>
     constexpr Array(Args... args) : buffer_{T{args}...}
     {
