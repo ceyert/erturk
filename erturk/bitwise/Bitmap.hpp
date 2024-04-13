@@ -8,13 +8,13 @@ namespace erturk
 namespace bitwise
 {
 
-template <size_t BIT_IDX>
+template <size_t BIT_SIZE>
 class Bitmap
 {
 private:
     static constexpr size_t CHAR_SIZE_ = 8;
 
-    static constexpr size_t BUFFER_SIZE_ = (BIT_IDX + CHAR_SIZE_ - 1) / CHAR_SIZE_;
+    static constexpr size_t BUFFER_SIZE_ = (BIT_SIZE + CHAR_SIZE_ - 1) / CHAR_SIZE_;
 
     erturk::container::Array<unsigned char, BUFFER_SIZE_> buffer_{};
 
@@ -26,7 +26,7 @@ public:
     // Set a bit to 1
     void set(size_t index)
     {
-        if (index >= BIT_IDX)
+        if (index >= BIT_SIZE)
         {
             return;
         }
@@ -37,7 +37,7 @@ public:
     // Clear a bit to 0
     void clear(size_t index)
     {
-        if (index >= BIT_IDX)
+        if (index >= BIT_SIZE)
         {
             return;
         }
@@ -48,7 +48,7 @@ public:
     // Flip a bit (0->1, 1->0)
     void flip(size_t index)
     {
-        if (index >= BIT_IDX)
+        if (index >= BIT_SIZE)
         {
             return;
         }
@@ -59,7 +59,7 @@ public:
     // Check if a bit is set (1)
     bool test(size_t index) const
     {
-        if (index >= BIT_IDX)
+        if (index >= BIT_SIZE)
         {
             return false;
         }
@@ -72,7 +72,7 @@ public:
     {
         size_t count = 0;
 
-        for (size_t idx = 0; idx < BIT_IDX; idx++)
+        for (size_t idx = 0; idx < BIT_SIZE; idx++)
         {
             if (test(idx))
             {
