@@ -1,35 +1,35 @@
 
-#include "../../erturk/bitwise/Bitmap.hpp"
+#include "../../erturk/bitwise/BitArray.hpp"
 #include <iostream>
 
 
 int main()
 {
-    erturk::bitwise::Bitmap<32> bitmap{};
+    erturk::bitwise::BitArray<32> bitArray{};
 
    // Set some bits
-    bitmap.set(0);   // Set the 0th bit
-    bitmap.set(5);   // Set the 5th bit
-    bitmap.set(31);  // Set the last bit in bitmap (31st bit)
+    bitArray.set(0);   // Set the 0th bit
+    bitArray.set(5);   // Set the 5th bit
+    bitArray.set(31);  // Set the last bit in bitmap (31st bit)
 
     // Test bits
-    std::cout << "Bit 0 is " << (bitmap.test(0) ? "set" : "clear") << std::endl;
-    std::cout << "Bit 1 is " << (bitmap.test(1) ? "set" : "clear") << std::endl;
-    std::cout << "Bit 5 is " << (bitmap.test(5) ? "set" : "clear") << std::endl;
+    std::cout << "Bit 0 is " << (bitArray.test(0) ? "set" : "clear") << std::endl;
+    std::cout << "Bit 1 is " << (bitArray.test(1) ? "set" : "clear") << std::endl;
+    std::cout << "Bit 5 is " << (bitArray.test(5) ? "set" : "clear") << std::endl;
 
     // Number of set bits
-    std::cout << "Number of set bits: " << bitmap.count() << std::endl;
+    std::cout << "Number of set bits: " << bitArray.count() << std::endl;
 
     // Flip a bit
-    bitmap.flip(5);
-    std::cout << "Bit 5 is " << (bitmap.test(5) ? "set" : "clear") << " after flip" << std::endl;
+    bitArray.flip(5);
+    std::cout << "Bit 5 is " << (bitArray.test(5) ? "set" : "clear") << " after flip" << std::endl;
 
     // Clear a bit
-    bitmap.clear(0);
-    std::cout << "Bit 0 is " << (bitmap.test(0) ? "set" : "clear") << " after clear" << std::endl;
+    bitArray.clear(0);
+    std::cout << "Bit 0 is " << (bitArray.test(0) ? "set" : "clear") << " after clear" << std::endl;
 
     // Number of set bits
-    std::cout << "Final number of set bits: " << bitmap.count() << std::endl;
+    std::cout << "Final number of set bits: " << bitArray.count() << std::endl;
 
     return 0;
 }

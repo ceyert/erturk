@@ -9,7 +9,7 @@ namespace bitwise
 {
 
 template <size_t BIT_SIZE>
-class Bitmap
+class BitArray
 {
 private:
     static constexpr size_t CHAR_SIZE_ = 8;
@@ -19,9 +19,9 @@ private:
     erturk::container::Array<unsigned char, BUFFER_SIZE_> buffer_{};
 
 public:
-    Bitmap() = default;
+    BitArray() = default;
 
-    ~Bitmap() = default;
+    ~BitArray() = default;
 
     // Set a bit to 1
     void set(size_t index)
