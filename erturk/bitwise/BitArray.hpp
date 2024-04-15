@@ -72,15 +72,54 @@ public:
     {
         size_t count = 0;
 
-        for (size_t idx = 0; idx < BIT_SIZE; idx++)
+        for (unsigned char byte : buffer_)
         {
-            if (test(idx))
+            while (byte)
             {
-                count++;
+                count += byte & 1;
+                byte >>= 1;
             }
         }
         return count;
     }
+
+    // Resets all bits 
+    void reset()
+    {
+        for (unsigned char& byte : buffer_)
+        {
+            byte = 0;
+        } 
+    }
+
+    // Checks all bits are set to 1
+    bool all() const
+    {
+        for (size_t i = 0; i < BUFFER_SIZE_; i++)
+        {
+            if (buffer_[i] != 0xFF)
+            {
+                return false;
+            } 
+        }
+
+        return true;
+    }
+
+    // Checks all bits are set to 0
+    bool none() const
+    {
+        for (const unsigned char& byte : buffer_)
+        {
+            if (byte != 0)
+            {
+                return false;
+            } 
+        }
+        return true;
+    }
+
+
 };
 
 }  // namespace bitwise
