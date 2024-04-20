@@ -1,6 +1,7 @@
-#ifndef ERTURK_BITMAP_H
-#define ERTURK_BITMAP_H
+#ifndef ERTURK_BITARRAY_H
+#define ERTURK_BITARRAY_H
 
+#include <utility>
 #include "../../erturk/container/Array.hpp"
 
 namespace erturk
@@ -8,7 +9,7 @@ namespace erturk
 namespace bitwise
 {
 
-template <size_t BIT_SIZE>
+template <const size_t BIT_SIZE>
 class BitArray
 {
 private:
@@ -20,8 +21,31 @@ private:
 
 public:
     BitArray() = default;
+    
+    // Copy constructor
+    BitArray(const BitArray& other) : buffer_(other.buffer_) {}
 
+    // Move constructor
+    BitArray(BitArray&& other) noexcept : buffer_(std::move(other.buffer_)) {}
+
+    // Destructor
     ~BitArray() = default;
+
+    // Copy assignment operator
+    BitArray& operator=(const BitArray& other) {
+        if (this != &other) {
+            buffer_ = other.buffer_;
+        }
+        return *this;
+    }
+
+    // Move assignment operator
+    BitArray& operator=(BitArray&& other) noexcept {
+        if (this != &other) {
+            buffer_ = std::move(other.buffer_);
+        }
+        return *this;
+    }
 
     // Set a bit to 1
     void set(size_t index)
@@ -118,11 +142,9 @@ public:
         }
         return true;
     }
-
-
 };
 
 }  // namespace bitwise
 }  // namespace erturk
 
-#endif  // ERTURK_BITMAP_H
+#endif  // ERTURK_BITARRAY_H

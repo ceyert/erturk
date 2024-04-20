@@ -37,7 +37,7 @@ public:
     {
         for (std::size_t i = 0; i < SIZE; i++)
         {
-            buffer_[i] = std::move(val);
+            buffer_[i] = val;
         }
     }
 
@@ -55,6 +55,30 @@ public:
         {
             buffer_[i] = std::move(other.buffer_[i]);
         }
+    }
+
+    constexpr Array& operator=(const Array& other) 
+    {
+        if (this != &other) 
+        {
+            for (std::size_t i = 0; i < SIZE; ++i) 
+            {
+                buffer_[i] = other.buffer_[i];
+            }
+        }
+        return *this;
+    }
+
+    constexpr Array& operator=(Array&& other) noexcept 
+    {
+        if (this != &other) 
+        {
+            for (std::size_t i = 0; i < SIZE; i++) 
+            {
+                buffer_[i] = std::move(other.buffer_[i]);
+            }
+        }
+        return *this;
     }
 
     void fill(const T& value)
