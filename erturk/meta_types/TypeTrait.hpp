@@ -5,10 +5,14 @@
 
 namespace erturk {
     namespace detail {
+
         template<typename T, T rvalue>
-        struct integral_constant_impl {
+        struct integral_constant_impl 
+        {
             static constexpr const T value = rvalue;
+
             using value_type = T;
+
             using type = integral_constant_impl;
 
             constexpr explicit operator value_type() const noexcept {
@@ -23,9 +27,10 @@ namespace erturk {
         using true_type = integral_constant_impl<bool, true>;
         using false_type = integral_constant_impl<bool, false>;
 
-// Arithmetic type traits definitions
+        // Arithmetic type traits definitions
         template<typename T>
-        struct is_arithmetic_impl : false_type {
+        struct is_arithmetic_impl : false_type 
+        {
         };
 
 #define MAKE_ARITHMETIC_TYPE(T)              \
@@ -64,7 +69,7 @@ namespace erturk {
 #endif
 
         template<bool B, typename T, typename F>
-        struct conditional_impl;
+        struct conditional_impl{};
 
         template<typename T, typename F>
         struct conditional_impl<true, T, F> {
@@ -75,15 +80,22 @@ namespace erturk {
         struct conditional_impl<false, T, F> {
             typedef F type;
         };
-        
-        template<bool B, typename T>
-        struct enableif_impl;
 
+        template<typename T, typename U>
+        struct is_same_impl : false_type {
+        };
+
+        template<typename T>
+        struct is_same_impl<T, T> : true_type {
+        };
+        
+        template<bool Condition, typename T>
+        struct enableif_impl{};
                 
         template<typename T>
         struct enableif_impl<true, T>
         {
-              typedef T type;
+            typedef T type;
         };
 
         // Signed and unsigned type traits
@@ -109,14 +121,6 @@ namespace erturk {
 
         template<typename T>
         struct is_unsigned_impl : is_unsigned_helper_impl<T> {
-        };
-
-        template<typename T, typename U>
-        struct is_same_impl : false_type {
-        };
-
-        template<typename T>
-        struct is_same_impl<T, T> : true_type {
         };
 
         template<typename T>
@@ -249,7 +253,7 @@ namespace erturk {
 
         template<typename T>
         struct add_rvalue_reference_impl {
-            using type = T &&;
+            using type = T&&;
         };
 
         template<typename T>
@@ -313,6 +317,38 @@ namespace erturk {
 
         template<typename T>
         struct is_trivially_copyable_impl : integral_constant_impl<bool, __is_trivially_copyable(T)> {
+        };
+
+        template<typename T>
+        struct is_abstract_impl : integral_constant_impl<bool, __is_abstract(T)> {
+        };
+
+        template<typename T>
+        struct is_class_impl : integral_constant_impl<bool, __is_class(T)> {
+        };
+
+        template<typename T>
+        struct is_enum_impl : integral_constant_impl<bool, __is_enum(T)> {
+        };
+
+        template<typename T>
+        struct is_union_impl : integral_constant_impl<bool, __is_union(T)> {
+        };
+
+        template<typename T>
+        struct is_literal_type_impl : integral_constant_impl<bool, __is_literal_type(T)> {
+        };
+
+        template<typename T>
+        struct is_pod_impl : integral_constant_impl<bool, __is_pod(T)> {
+        };
+
+        template<typename T>
+        struct is_polymorphic_impl : integral_constant_impl<bool, __is_polymorphic(T)> {
+        };
+
+        template<typename T>
+        struct is_standard_layout_impl : integral_constant_impl<bool, __is_standard_layout(T)> {
         };
 
     }  // namespace detail
@@ -436,6 +472,38 @@ namespace erturk {
 
         template<typename T>
         struct is_trivially_copyable : detail::is_trivially_copyable_impl<T> {
+        };
+
+        template<typename T>
+        struct is_abstract : detail::is_abstract_impl<T> {
+        };
+
+        template<typename T>
+        struct is_class : detail::is_class_impl<T> {
+        };
+
+        template<typename T>
+        struct is_enum : detail::is_enum_impl<T> {
+        };
+
+        template<typename T>
+        struct is_union : detail::is_union_impl<T> {
+        };
+
+        template<typename T>
+        struct is_literal_type : detail::is_literal_type_impl<T> {
+        };
+
+        template<typename T>
+        struct is_pod : detail::is_pod_impl<T> {
+        };
+
+        template<typename T>
+        struct is_polymorphic : detail::is_polymorphic_impl<T> {
+        };
+
+        template<typename T>
+        struct is_standard_layout : detail::is_standard_layout_impl<T> {
         };
 
     }  // namespace meta
