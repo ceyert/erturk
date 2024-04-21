@@ -57,16 +57,12 @@ namespace erturk {
         MAKE_ARITHMETIC_TYPE(float)
         MAKE_ARITHMETIC_TYPE(double)
         MAKE_ARITHMETIC_TYPE(long double)
-#undef MAKE_ARITHMETIC_TYPE
 
 #ifdef __SIZEOF_INT128__
-        template<>
-        struct is_arithmetic_impl<__int128> : true_type {
-        };
-        template<>
-        struct is_arithmetic_impl<unsigned __int128> : true_type {
-        };
+        MAKE_ARITHMETIC_TYPE(__int128)
+        MAKE_ARITHMETIC_TYPE(unsigned __int128)
 #endif
+#undef MAKE_ARITHMETIC_TYPE
 
         template<bool B, typename T, typename F>
         struct conditional_impl{};
