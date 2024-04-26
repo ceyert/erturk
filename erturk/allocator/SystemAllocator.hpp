@@ -70,10 +70,10 @@ public:
         using other = SystemAllocator<U>;
     };
 
-    template<typename U>
-    void construct(U *ptr, U &&value) {
+    template<typename U, typename... Args>
+    void construct(U *ptr, Args&&... values) {
         if (ptr != nullptr) {
-            new(ptr) U{std::forward<U>(value)};
+            new(ptr) U{std::forward<Args>(values)...};
         }
     }
 
