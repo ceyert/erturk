@@ -1,5 +1,5 @@
-#ifndef ERTURK_BITARRAY_H
-#define ERTURK_BITARRAY_H
+#ifndef ERTURK_SYSTEM_ALLOC_H
+#define ERTURK_SYSTEM_ALLOC_H
 
 #include <new>
 #include <memory>
@@ -88,4 +88,4 @@ public:
 }  // namespace allocator
 }  // namespace erturk
 
-#endif  // ERTURK_BITARRAY_H
+#endif  // ERTURK_SYSTEM_ALLOC_H
