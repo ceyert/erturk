@@ -3,10 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 target_sources(
         ${CMAKE_PROJECT_NAME}
         PUBLIC
-        ${CMAKE_SOURCE_DIR}/erturk/allocator/Todo.hpp
-        ${CMAKE_SOURCE_DIR}/erturk/allocator/_Marker.cpp
-        PRIVATE
-        ${CMAKE_SOURCE_DIR}/erturk/allocator/detail/Todo.hpp)
+        ${CMAKE_SOURCE_DIR}/erturk/allocator/SystemAllocator.hpp)
 
 
 target_include_directories(
