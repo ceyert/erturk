@@ -8,6 +8,15 @@ namespace erturk
 {
     namespace memory::layout 
     {
+        inline size_t alignment(size_t value, size_t alignment) 
+        {
+            if (value % alignment != 0) 
+            {
+                return ((value / alignment) + 1) * alignment; // +1 used to round up
+            }
+            return value;
+        }
+
         inline bool isPowerOfTwo(uintptr_t ptr) 
         {
             return ptr != 0 && (ptr & (ptr - 1)) == 0;
