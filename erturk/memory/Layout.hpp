@@ -2,35 +2,36 @@
 #define ERTURK_MEMLAYOUT_H
 
 #include <cstdint>
+#include <cstddef>
 #include <stdexcept>
 
 namespace erturk 
 {
     namespace memory::layout 
     {
-        inline size_t alignment(size_t value, size_t alignment) 
+        template<typename T>
+        inline bool isStorageAligned(const T* const storage) 
         {
-            if (value % alignment != 0) 
+            if (storage == nullptr) 
             {
-                return ((value / alignment) + 1) * alignment; // +1 used to round up
+                return false;
             }
-            return value;
+            // check that, provided storage address is alined with type alignment
+            return reinterpret_cast<std::uintptr_t>(storage) % alignof(T) == 0;
         }
 
-        inline bool isPowerOfTwo(uintptr_t ptr) 
+        inline size_t alignSize(size_t size, size_t alignment) 
         {
-            return ptr != 0 && (ptr & (ptr - 1)) == 0;
+            if (size % alignment != 0) 
+            {
+                return ((size / alignment) + 1) * alignment; // +1 used to round up
+            }
+            return size;
         }
 
-        inline bool isAddressPowerOfTwo(void *ptr) 
+        inline bool isAddressAligned(const void* const ptr, size_t alignment) 
         {
-            uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
-            return isPowerOfTwo(address);
-        }
-
-        inline bool isAddressPowerOfAlignment(void *ptr, size_t alignment) 
-        {
-            if (!isPowerOfTwo(alignment)) 
+            if (!isSizePowerOfTwo(alignment)) 
             {
                 return false;  // Alignment must be a power of two
             }
@@ -38,20 +39,17 @@ namespace erturk
             return (address % alignment) == 0;
         }
 
-        inline void *alignAddress(void *ptr, size_t alignment) 
+        inline bool isAddressPowerOfTwo(const void* const ptr) 
         {
-            if (ptr == nullptr || alignment == 0 || !isAddressPowerOfAlignment(ptr, alignment)) 
-            {
-                return nullptr;
-            }
-
-            uintptr_t mask = alignment - 1;
             uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
-
-            // Rounds up the address to the nearest multiple of the alignment
-            uintptr_t alignedAddress = (address + mask) & ~mask;
-            return reinterpret_cast<void *>(alignedAddress);
+            return isSizePowerOfTwo(address);
         }
+
+        inline bool isSizePowerOfTwo(uintptr_t size) 
+        {
+            return size != 0 && (size & (size - 1)) == 0;
+        }
+
     }  // namespace memory::layout
 }  // namespace erturk
 
