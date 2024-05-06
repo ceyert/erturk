@@ -91,7 +91,10 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
 
     while (size > 0)
     {
-        if (*str1_ != *str2_) return (*str1_ < *str2_) ? -1 : 1;
+        if (*str1_ != *str2_)
+        {
+            return (*str1_ < *str2_) ? -1 : 1;
+        } 
         str1_++;
         str2_++;
         size--;
