@@ -35,7 +35,7 @@ public:
 
     ~AlignedSystemAllocator() noexcept = default;
 
-    pointer allocate(const size_t requestInBytes, const size_t alignment = alignof(T))
+    pointer allocate(const size_t requestInBytes, size_t alignment = alignof(T))
     {
         if (requestInBytes == 0)
         {
@@ -71,17 +71,17 @@ public:
         }
 
         // put base addr after sizeof(void*) so we have space to put raw_memory
-        void* offseted_base_addr = static_cast<char*>(raw_memory) + sizeof(void*);  
+        void* offseted_base_addr = static_cast<char*>(raw_memory) + sizeof(void*);
 
-        void* aligned_memory =
-            memory::alignment::alignPointerFromBuffer(alignment_, total_required_size, offseted_base_addr, aligned_total_size);
+        void* aligned_memory = memory::alignment::alignPointerFromBuffer(alignment_, total_required_size,
+                                                                         offseted_base_addr, aligned_total_size);
 
         if (aligned_memory == nullptr)
         {
             ::operator delete(raw_memory);
             return nullptr;
         }
-        
+
         // store un-aligned memory address just before aligned base address
         *((void**)((char*)aligned_memory - sizeof(void*))) = raw_memory;
 

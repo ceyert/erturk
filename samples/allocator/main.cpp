@@ -1,7 +1,6 @@
 #include "../../erturk/allocator/AlignedSystemAllocator.hpp"
 #include <iostream>
 #include <list>
-#include <map>
 #include <vector>
 
 int main()
@@ -39,21 +38,6 @@ int main()
         }
     }
 
-    {
-        std::map<const int, std::string, std::less<int>,
-                 erturk::allocator::AlignedSystemAllocator<std::pair<const int, std::string>>>
-            my_map{};
-
-        for (int i = 0; i < 1000; i++)
-        {
-            my_map.emplace(i, std::to_string(i));
-        }
-
-        for (const auto& pair : my_map)
-        {
-            std::cout << "Key: " << pair.first << " Value: " << pair.second << " at Address: " << &pair << std::endl;
-        }
-    }
 
     return 0;
 }

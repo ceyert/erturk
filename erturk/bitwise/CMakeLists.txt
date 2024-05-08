@@ -1,12 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-target_sources(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC
-        ${CMAKE_SOURCE_DIR}/erturk/bitwise/BitArray.hpp
-        ${CMAKE_SOURCE_DIR}/erturk/bitwise/MultiDimensionalBitArray.hpp)
+add_library(bitwise INTERFACE)
 
 target_include_directories(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC ${CMAKE_SOURCE_DIR}
-        PRIVATE ${CONAN_INCLUDE_DIRS})
+        bitwise INTERFACE
+        ${CMAKE_SOURCE_DIR}/erturk/allocator/MultiDimensionalBitArray.hpp)
+

@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-target_sources(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC
+add_library(allocator INTERFACE)
+
+target_include_directories(allocator INTERFACE
         ${CMAKE_SOURCE_DIR}/erturk/allocator/AlignedSystemAllocator.hpp)
-
-
-target_include_directories(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC ${CMAKE_SOURCE_DIR}
-        PRIVATE ${CONAN_INCLUDE_DIRS})

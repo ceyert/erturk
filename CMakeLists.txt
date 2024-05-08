@@ -6,81 +6,37 @@ project(erturk VERSION 0.0.1)
 if (NOT WIN32)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Release)
-    endif ()
-endif ()
+    endif()
+endif()
 
-option(ENABLE_QA_TEST_APP "Enable/Disable qa_test_app" ON)
-option(ENABLE_LOGS "Enable/Disable logging" ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Extend a list of directories specifying a search path for CMake modules to be
-# loaded by the the include() or find_package() commands.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_BINARY_DIR}")
+# Only support Linux and macOS
+if (NOT UNIX OR NOT APPLE)
+    message(FATAL_ERROR "This framework only supported on Linux and macOS.")
+endif()
 
-# Compile Cache Setup
-if (ENABLE_COMPILE_CACHE)
-    # NOTE Uses CONAN_ variable(s) provided by include(conanbuildinfo)
-    include(CompileCache)
-endif ()
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-set(CMAKE_CXX_EXTENSIONS OFF) # This line is optional and ensures -std=c++14 instead of -std=gnu++14
-
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# Compiler-specific settings
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(STATUS "Configuring for Clang")
+    add_compile_options(-Wall -Wextra)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "Configuring for GCC")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
         message(FATAL_ERROR "GCC version should be at least 5.1")
     endif()
+    add_compile_options(-Wall -Wextra)
 else()
-    message(WARNING "You are using a non-GCC compiler for C++14.")
+    message(WARNING "You are using a non-GCC/Clang compiler for C++17")
 endif()
 
+# Define the library as an INTERFACE since it is header-only
+add_library(${PROJECT_NAME} INTERFACE)
 
-if (NOT CONAN_EXPORTED)
-    include(conan)
+# Include directories
+target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_SOURCE_DIR}/erturk)
 
-    conan_cmake_autodetect(settings BUILD_TYPE ${OVERRIDE_CONAN_BUILD_TYPE})
-    conan_cmake_install(
-            PATH_OR_REFERENCE
-            ${CMAKE_SOURCE_DIR}
-            BUILD
-            missing
-            ${CONAN_BUILD_EXTRA_ARGS}
-            SETTINGS
-            ${settings})
-endif ()
-
-# NOTE Provides CONAN_ variables and some useful macros. Provided by Conan
-# generator 'cmake' (see conanfile).
-include(conanbuildinfo)
-
-conan_basic_setup()
-
-add_library(${PROJECT_NAME})
-
-
-if (ENABLE_LOGS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_LOGGING=4)
-else ()
-    target_compile_definitions(${PROJECT_NAME}
-            PUBLIC
-            $<$<CONFIG:Debug>:ENABLE_LOGGING=0>
-            $<$<CONFIG:Release>:ENABLE_LOGGING=0>
-            $<$<CONFIG:RelWithDebInfo>:ENABLE_LOGGING=0>
-    )
-endif ()
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
-
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${CONAN_INCLUDE_DIRS})
-
-# Private header files should be part of `src` to avoid re-distribution
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
-
+# Add subdirectories if needed
 add_subdirectory(erturk)
-
-if (ENABLE_QA_TEST_APP)
-    add_subdirectory(qa_app)
-endif ()

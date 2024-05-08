@@ -1,14 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-target_sources(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC
-        ${CMAKE_SOURCE_DIR}/erturk/container/Array.hpp)
+add_library(array INTERFACE)
 
 target_include_directories(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC ${CMAKE_SOURCE_DIR}
-        PRIVATE ${CONAN_INCLUDE_DIRS})
+        array INTERFACE
+        ${CMAKE_SOURCE_DIR}/erturk/container/Array.hpp)
+
 
 add_subdirectory(algorithms)
 add_subdirectory(sparse)

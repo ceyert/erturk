@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-target_sources(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC
-        ${CMAKE_SOURCE_DIR}/erturk/memory/Alignment.hpp
-        ${CMAKE_SOURCE_DIR}/erturk/memory/Memory.hpp)
-
+add_library(memory INTERFACE)
 
 target_include_directories(
-        ${CMAKE_PROJECT_NAME}
-        PUBLIC ${CMAKE_SOURCE_DIR}
-        PRIVATE ${CONAN_INCLUDE_DIRS})
+        memory INTERFACE
+        ${CMAKE_SOURCE_DIR}/erturk/memory/Alignment.hpp
+        ${CMAKE_SOURCE_DIR}/erturk/memory/Memory.hpp)
