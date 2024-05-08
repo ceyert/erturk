@@ -11,7 +11,7 @@ namespace allocator
 {
 
 template <class T>
-class SystemAllocator final
+class AlignedSystemAllocator final
 {
 public:
     typedef std::size_t size_type;
@@ -23,17 +23,17 @@ public:
     typedef T value_type;
 
 public:
-    SystemAllocator() noexcept = default;
+    AlignedSystemAllocator() noexcept = default;
 
-    SystemAllocator(const SystemAllocator&) noexcept = delete;
+    AlignedSystemAllocator(const AlignedSystemAllocator&) noexcept = delete;
 
-    SystemAllocator& operator=(const SystemAllocator&) noexcept = delete;
+    AlignedSystemAllocator& operator=(const AlignedSystemAllocator&) noexcept = delete;
 
-    SystemAllocator(SystemAllocator&&) noexcept = default;
+    AlignedSystemAllocator(AlignedSystemAllocator&&) noexcept = default;
 
-    SystemAllocator& operator=(SystemAllocator&&) noexcept = default;
+    AlignedSystemAllocator& operator=(AlignedSystemAllocator&&) noexcept = default;
 
-    ~SystemAllocator() noexcept = default;
+    ~AlignedSystemAllocator() noexcept = default;
 
     pointer allocate(const size_t requestInBytes, const size_t alignment = alignof(T))
     {
@@ -46,9 +46,9 @@ public:
 
         size_t total_required_size = (requestInBytes * sizeof(T));
 
-        size_t rounded_total_size = memory::alignment::alignSize(total_required_size, alignment_);
+        size_t aligned_total_size = memory::alignment::alignSize(total_required_size, alignment_);
 
-        void* raw_memory = ::operator new(rounded_total_size);
+        void* raw_memory = ::operator new(aligned_total_size);
 
         if (raw_memory == nullptr)
         {
@@ -68,7 +68,7 @@ public:
         void* offseted_base_addr = static_cast<char*>(raw_memory) + sizeof(void*);  
 
         void* aligned_memory =
-            memory::alignment::alignPointerFromBuffer(alignment_, total_required_size, offseted_base_addr, rounded_total_size);
+            memory::alignment::alignPointerFromBuffer(alignment_, total_required_size, offseted_base_addr, aligned_total_size);
 
         if (aligned_memory == nullptr)
         {
@@ -110,7 +110,7 @@ public:
     template <typename U>
     struct rebind
     {
-        using other = SystemAllocator<U>;
+        using other = AlignedSystemAllocator<U>;
     };
 
     template <typename U, typename... Args>
