@@ -42,6 +42,12 @@ public:
             return nullptr;
         }
 
+        // check that alignment is aligned
+        if (!memory::alignment::isSizePowerOfTwo(alignment))
+        {
+            alignment = memory::alignment::alignSize(alignment, alignof(T));
+        }
+
         alignment_ = alignment;
 
         size_t total_required_size = (requestInBytes * sizeof(T));
@@ -55,7 +61,7 @@ public:
             return nullptr;
         }
 
-        // check raw_memory is already aligned
+        // check raw_memory is already aligned if we lucky
         if (memory::alignment::isAddressAligned(raw_memory, alignment_))
         {
             // store un-aligned memory address just before aligned base address
@@ -86,24 +92,17 @@ public:
     {
         if (ptr != nullptr)
         {
-            if (alignment_applied_)
+            // retrieve un-aligned memory address just before aligned base address
+            T* raw_memory = static_cast<T*>(*((void**)((char*)ptr - sizeof(void*))));
+
+            if (raw_memory == nullptr)
             {
-                // retrieve un-aligned memory address just before aligned base address
-                T* raw_memory = static_cast<T*>(*((void**)((char*)ptr - sizeof(void*))));
-
-                if (raw_memory == nullptr)
-                {
-                    // somethings went wrong! (raw memory may corruped or overrided!)
-                    ::operator delete(ptr, size * sizeof(T), alignment_);
-                    return;
-                }
-
-                ::operator delete(raw_memory, size * sizeof(T), alignment_);
-
+                // somethings went wrong! (raw memory may corruped or overrided!)
+                ::operator delete(ptr, size * sizeof(T), alignment_);
                 return;
             }
 
-            ::operator delete(ptr, size * sizeof(T), alignment_);
+            ::operator delete(raw_memory, size * sizeof(T), alignment_);
         }
     }
 
@@ -132,7 +131,6 @@ public:
     }
 
 private:
-    bool alignment_applied_{false};
     size_t alignment_{0};
 };
 

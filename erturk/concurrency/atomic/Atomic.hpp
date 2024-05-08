@@ -25,7 +25,7 @@ template <typename T>
 class Atomic
 {
 public:
-    static_assert(erturk::meta::is_trivial<T>::value, "Atomic only supports integral types.");
+    static_assert((erturk::meta::is_trivial<T>::value && erturk::meta::is_trivially_copyable<T>::value), "Atomic types must be trivially-copyable!");
 
     explicit constexpr Atomic(T initialValue = T{}) : value(initialValue) {}
 
@@ -355,7 +355,7 @@ private:
     }
 
 private:
-    T value;
+    T value{};
 };
 
 /*
@@ -569,7 +569,7 @@ inline bool atomic_test_and_set(bool* ptr)
 }  // namespace erturk
 
 #else
-#error "This atomic functionality is only supported on x86 and x86_64 architectures."
+#error "Atomic functionalities is only supported on x86 & x86_64 architectures."
 #endif
 
 #endif  // ERTURK_ATOMIC_H
