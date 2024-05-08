@@ -60,7 +60,7 @@ namespace erturk
         template<typename T>
         inline bool isStorageAligned(const T* const storage, const size_t alignment) 
         {
-            if (storage == nullptr || alignment == 0) 
+            if (storage == nullptr) 
             {
                 return false;
             }
