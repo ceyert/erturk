@@ -58,6 +58,17 @@ namespace erturk
         }
 
         template<typename T>
+        inline bool isStorageAligned(const T* const storage, const size_t alignment) 
+        {
+            if (storage == nullptr || alignment == 0) 
+            {
+                return false;
+            }
+            // check that, provided storage address is alined with type alignment
+            return reinterpret_cast<uintptr_t>(storage) % alignment == 0;
+        }
+
+        template<typename T>
         inline bool isStorageAligned(const T* const storage) 
         {
             if (storage == nullptr) 
