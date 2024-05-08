@@ -34,6 +34,7 @@ namespace erturk
             return size;
         }
 
+        // To advance a pointer to the next address with the desired alignment
         inline void *alignAddress(const size_t alignment, const size_t size, void* ptr, size_t &space) 
         {
             if (!isSizePowerOfTwo(alignment) || ptr == nullptr) 
