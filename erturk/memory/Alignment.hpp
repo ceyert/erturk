@@ -64,7 +64,7 @@ namespace erturk
             {
                 return false;
             }
-            // check that, provided storage address is alined with type alignment
+            // check that, provided storage address is alined with provided alignment
             return reinterpret_cast<uintptr_t>(storage) % alignment == 0;
         }
 
