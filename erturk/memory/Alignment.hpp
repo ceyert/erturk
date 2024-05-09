@@ -35,7 +35,7 @@ inline size_t alignSize(size_t size, size_t alignment)
 }
 
 // To advance a pointer to the next address with the desired alignment within buffer
-inline void* alignPointerFromBuffer(const size_t alignment, const size_t size, void* ptr, size_t& space)
+inline void* alignAddressFromBuffer(const size_t alignment, const size_t size, void* ptr, size_t& space)
 {
     if (!isSizePowerOfTwo(alignment) || ptr == nullptr)
     {
@@ -87,6 +87,21 @@ inline bool isAddressAligned(const void* const ptr, size_t alignment)
     }
     uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
     return (address % alignment) == 0;
+}
+
+// Safety : Ensure that address is sequential that is larger than alignment size
+inline void* alignAddressUnsafe(void* ptr, size_t alignment)
+{
+    if (!isSizePowerOfTwo(alignment) || ptr == nullptr)
+    {
+        return nullptr;
+    }
+
+    uintptr_t address = reinterpret_cast<uintptr_t>(ptr);
+
+    size_t aligned = alignSize(address, alignment);
+
+    return ptr = reinterpret_cast<void*>(aligned);
 }
 
 }  // namespace memory::alignment

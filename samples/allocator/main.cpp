@@ -6,6 +6,17 @@
 int main()
 {
     {
+        erturk::allocator::AlignedSystemAllocator<int> allocator{};
+        int* ptr = allocator.allocate(27);
+
+        int* ptr2 = allocator.allocate(57);
+
+
+        allocator.deallocate(ptr, 27);
+        allocator.deallocate(ptr2, 57);
+    }
+
+    {
         std::vector<int, erturk::allocator::AlignedSystemAllocator<int>> my_vector(50, 42);
 
         for (int i = 0; i < 1000; i++)
@@ -37,7 +48,6 @@ int main()
             std::cout << "Value: " << value << " at Address: " << &value << std::endl;
         }
     }
-
 
     return 0;
 }

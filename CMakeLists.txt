@@ -2,19 +2,15 @@ cmake_minimum_required(VERSION 3.20)
 
 project(erturk VERSION 0.0.1)
 
+if (WIN32)
+    message(FATAL_ERROR "erturk framework not supported on windows machines.")
+endif()
+
 # Set build types
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Release)
-
-if (WIN32)
-    message(FATAL_ERROR "erturk framework not supported on windows machines.")
-endif()
-
-if (NOT UNIX OR NOT APPLE)
-    message(FATAL_ERROR "erturk framework only supported on Linux and macOS machines.")
-endif()
 
 # Compiler-specific settings
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
