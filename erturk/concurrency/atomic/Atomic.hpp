@@ -908,7 +908,7 @@ inline bool atomic_test_and_set(bool& ptr)
     return oldValue;
 }
 
-inline bool atomic_test_and_set(bool val)
+inline bool atomic_test_and_set(bool&& val)
 {
     static_assert(sizeof(void*) == 4 || sizeof(void*) == 8, "Unsupported operand size for atomic operations.");
 
