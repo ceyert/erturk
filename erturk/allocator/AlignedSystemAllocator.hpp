@@ -88,7 +88,8 @@ public:
         return static_cast<T*>(aligned_memory);
     }
 
-    void deallocate(const T* ptr, const size_t size) noexcept
+    // n: number of storages earlier passed to allocate()
+    void deallocate(const T* ptr, const size_t n) noexcept
     {
         if (ptr != nullptr)
         {
@@ -98,11 +99,11 @@ public:
             if (raw_memory == nullptr)
             {
                 // somethings went wrong! (raw memory may corruped or overrided!)
-                ::operator delete(ptr, size * sizeof(T), alignment_);
+                ::operator delete(ptr, n * sizeof(T), alignment_);
                 return;
             }
 
-            ::operator delete(raw_memory, size * sizeof(T), alignment_);
+            ::operator delete(raw_memory, n * sizeof(T), alignment_);
         }
     }
 
