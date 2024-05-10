@@ -353,11 +353,11 @@ constexpr inline T atomic_exchange(T& ptr, T& newVal)
     T oldVal{};
 
 #if defined(__x86_64__)
-    if constexpr (sizeof(void*) == sizeof(uint32_t))
+    if constexpr (sizeof(T) == sizeof(int32_t))
     {
         __asm__ __volatile__("xchgl %0, %1" : "=r"(oldVal), "+m"(ptr) : "0"(newVal) : "memory");
     }
-    else if constexpr (sizeof(void*) == sizeof(uint64_t))
+    else if constexpr (sizeof(T) == sizeof(int64_t))
     {
         __asm__ __volatile__("xchgq %0, %1" : "=r"(oldVal), "+m"(ptr) : "0"(newVal) : "memory");
     }
@@ -423,14 +423,14 @@ constexpr inline bool atomic_compare_and_exchange_strong(T& ptr, T& expected, T&
 #if defined(__x86_64__)
     bool success;
 
-    if constexpr (sizeof(void*) == sizeof(uint32_t))
+    if constexpr (sizeof(T) == sizeof(int32_t))
     {
         __asm__ __volatile__("lock cmpxchgl %2, %1"
                              : "=a"(success), "+m"(ptr)
                              : "r"(desired), "0"(expected)
                              : "cc", "memory");
     }
-    else if constexpr (sizeof(void*) == sizeof(uint64_t))
+    else if constexpr (sizeof(T) == sizeof(int64_t))
     {
         __asm__ __volatile__("lock cmpxchgq %2, %1"
                              : "=a"(success), "+m"(ptr)
@@ -480,16 +480,16 @@ constexpr inline T atomic_fetch_and_add(T& ptr, T& val)
     static_assert((erturk::meta::is_trivial<T>::value && erturk::meta::is_trivially_copyable<T>::value),
                   "Atomic types must be trivially-copyable!");
 
-    T original{};
+    T original = val;
 
 #if defined(__x86_64__)
-    if constexpr (sizeof(void*) == sizeof(uint32_t))
+    if constexpr (sizeof(T) == sizeof(int32_t))
     {
-        __asm__ __volatile__("lock xaddl %0, %1" : "+r"(original), "+m"(ptr) : "0"(val) : "cc", "memory");
+        __asm__ __volatile__("lock xaddl %0, %1" : "+r"(original), "+m"(ptr) : : "cc", "memory");
     }
-    else if constexpr (sizeof(void*) == sizeof(uint64_t))
+    else if constexpr (sizeof(T) == sizeof(int64_t))
     {
-        __asm__ __volatile__("lock xaddq %0, %1" : "+r"(original), "+m"(ptr) : "0"(val) : "cc", "memory");
+        __asm__ __volatile__("lock xaddq %0, %1" : "+r"(original), "+m"(ptr) : : "cc", "memory");
     }
 #elif defined(__aarch64__)
     int64_t success;
@@ -515,16 +515,16 @@ constexpr inline T atomic_fetch_and_add(T& ptr, T&& val)
     static_assert((erturk::meta::is_trivial<T>::value && erturk::meta::is_trivially_copyable<T>::value),
                   "Atomic types must be trivially-copyable!");
 
-    T original{};
+    T original = val;
 
 #if defined(__x86_64__)
     if constexpr (sizeof(void*) == sizeof(uint32_t))
     {
-        __asm__ __volatile__("lock xaddl %0, %1" : "+r"(original), "+m"(ptr) : "0"(val) : "cc", "memory");
+        __asm__ __volatile__("lock xaddl %0, %1" : "+r"(original), "+m"(ptr) : : "cc", "memory");
     }
     else if constexpr (sizeof(void*) == sizeof(uint64_t))
     {
-        __asm__ __volatile__("lock xaddq %0, %1" : "+r"(original), "+m"(ptr) : "0"(val) : "cc", "memory");
+        __asm__ __volatile__("lock xaddq %0, %1" : "+r"(original), "+m"(ptr) : : "cc", "memory");
     }
 #elif defined(__aarch64__)
     int64_t success;
@@ -665,7 +665,7 @@ public:
         {
             case memory_order::memory_order_relaxed:
                 // A relaxed load might simply move the value without additional barriers.
-                if constexpr (sizeof(void*) == sizeof(uint32_t))
+                if constexpr (sizeof(T) == sizeof(int32_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldr %w0, %1" : "=r"(val) : "Q"(value_));
@@ -673,7 +673,7 @@ public:
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value_));
 #endif
                 }
-                else if constexpr (sizeof(void*) == sizeof(uint64_t))
+                else if constexpr (sizeof(T) == sizeof(int64_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldr %x0, %1" : "=r"(val) : "Q"(value_));
@@ -687,7 +687,7 @@ public:
                 // Acquire semantics can be ensured by a subsequent barrier.
                 // x86 loads have implicit acquire semantics, but we include a compiler barrier for illustration.
                 apply_memory_fence(memory_order::memory_order_acquire);
-                if constexpr (sizeof(void*) == sizeof(uint32_t))
+                if constexpr (sizeof(T) == sizeof(int32_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldar %w0, %1" : "=r"(val) : "Q"(value_) : "memory");
@@ -695,7 +695,7 @@ public:
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value_) : "memory");
 #endif
                 }
-                else if constexpr (sizeof(void*) == sizeof(uint64_t))
+                else if constexpr (sizeof(T) == sizeof(int64_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldar %x0, %1" : "=r"(val) : "Q"(value_) : "memory");
@@ -708,7 +708,7 @@ public:
                 // Sequentially consistent load requires a full fence before the load.
                 // x86's strong model makes this mostly unnecessary, but we include it for completeness.
                 apply_memory_fence(memory_order::memory_order_seq_cst);
-                if constexpr (sizeof(void*) == sizeof(uint32_t))
+                if constexpr (sizeof(T) == sizeof(int32_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldr %w0, %1" : "=r"(val) : "Q"(value_) : "memory");
@@ -716,7 +716,7 @@ public:
                     __asm__ __volatile__("movl %1, %0" : "=r"(val) : "m"(value_) : "memory");
 #endif
                 }
-                else if constexpr (sizeof(void*) == sizeof(uint64_t))
+                else if constexpr (sizeof(T) == sizeof(int64_t))
                 {
 #if defined(__aarch64__)
                     __asm__ __volatile__("ldr %x0, %1" : "=r"(val) : "Q"(value_) : "memory");
