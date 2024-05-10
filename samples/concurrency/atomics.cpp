@@ -32,11 +32,11 @@ int main()
 
     {
         // Usage of memory fence to ensure correct order of operations
-        erturk::atomic::apply_memory_fence(erturk::atomic::memory_order::memory_order_acquire);
+        erturk::atomic::atomic_memory_fence(erturk::atomic::memory_order::memory_order_acquire);
 
         std::cout << "Critical operations are safely executed after the fence.\n";
 
-        erturk::atomic::apply_memory_fence(erturk::atomic::memory_order::memory_order_release);
+        erturk::atomic::atomic_memory_fence(erturk::atomic::memory_order::memory_order_release);
     }
 
     {
@@ -87,7 +87,7 @@ int main()
 
     {
         bool lock = false;
-        bool wasLocked = erturk::atomic::atomic_test_and_set(&lock);
+        bool wasLocked = erturk::atomic::atomic_test_and_set(lock);
         std::cout << "Was locked: " << std::boolalpha << wasLocked << std::endl;
         std::cout << "Lock status: " << std::boolalpha << lock << std::endl;
     }
