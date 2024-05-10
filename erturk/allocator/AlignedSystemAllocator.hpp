@@ -42,7 +42,7 @@ public:
             return nullptr;
         }
 
-        const size_t total_required_size = ((count * sizeof(T)) + sizeof(void*));  // add additional addr space
+        const size_t total_required_size = ((count * sizeof(T)) + sizeof(void*));  // add additional space for storing un-aligned address
 
         const size_t rounded_total_size = memory::alignment::advanceSizeByAlignment(total_required_size, Alignment);
 
@@ -78,7 +78,7 @@ public:
     {
         if (ptr != nullptr)
         {
-            // retrieve un-aligned memory address just before aligned base address
+            // retrieve un-aligned memory address just before provided aligned address
             void* un_aligned_addr = memory::alignment::rewindAddressByAlignment(ptr, Alignment);
             if (un_aligned_addr == nullptr)
             {
@@ -94,7 +94,7 @@ public:
     {
         if (ptr != nullptr)
         {
-            // retrieve un-aligned memory address just before aligned base address
+            // retrieve un-aligned memory address just before provided aligned address
             void* un_aligned_addr = memory::alignment::rewindAddressByAlignment(ptr, Alignment);
             if (un_aligned_addr == nullptr)
             {
