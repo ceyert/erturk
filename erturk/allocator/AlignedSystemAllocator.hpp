@@ -8,9 +8,11 @@
 namespace erturk::allocator
 {
 
-template <class T>
+template <class T, const size_t Alignment = alignof(T)>
 class AlignedSystemAllocator
 {
+    static_assert((memory::alignment::isSizePowerOfTwo(Alignment)), "Alignment must be power of 2!");
+
 public:
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
@@ -21,123 +23,70 @@ public:
     typedef T value_type;
 
 public:
-    AlignedSystemAllocator() noexcept = default;
+    constexpr AlignedSystemAllocator() noexcept = default;
 
-    AlignedSystemAllocator(const AlignedSystemAllocator&) noexcept = default;
+    constexpr AlignedSystemAllocator(const AlignedSystemAllocator&) noexcept = default;
 
-    AlignedSystemAllocator& operator=(const AlignedSystemAllocator&) noexcept = default;
+    constexpr AlignedSystemAllocator& operator=(const AlignedSystemAllocator&) noexcept = default;
 
-    AlignedSystemAllocator(AlignedSystemAllocator&&) noexcept = default;
+    constexpr AlignedSystemAllocator(AlignedSystemAllocator&&) noexcept = default;
 
-    AlignedSystemAllocator& operator=(AlignedSystemAllocator&&) noexcept = default;
+    constexpr AlignedSystemAllocator& operator=(AlignedSystemAllocator&&) noexcept = default;
 
-    ~AlignedSystemAllocator() noexcept = default;
+    constexpr ~AlignedSystemAllocator() noexcept = default;
 
-    pointer_type allocate(const size_t requestInBytes, size_t alignment = alignof(T))
+    pointer_type allocate(const size_t count)
     {
-        if (requestInBytes == 0)
+        if (count == 0)
         {
             return nullptr;
         }
 
-        // check that alignment is aligned
-        if (!memory::alignment::isSizePowerOfTwo(alignment))
-        {
-            alignment = memory::alignment::alignSize(alignment, alignof(T));
-        }
+        size_t total_required_size = (count * sizeof(T));
 
-        alignment_ = alignment;
+        size_t rounded_total_size = memory::alignment::advanceSizeByAlignment(total_required_size, Alignment);
 
-        size_t total_required_size = (requestInBytes * sizeof(T));
-
-        size_t aligned_total_size = memory::alignment::alignSize(total_required_size, alignment_);
-
-        void* raw_memory = ::operator new(aligned_total_size);
+        void* raw_memory = ::operator new[](rounded_total_size);
 
         if (raw_memory == nullptr)
         {
             return nullptr;
         }
 
-        // check raw_memory is already aligned if we lucky
-        if (memory::alignment::isAddressAligned(raw_memory, alignment_))
+        // check raw_memory is already aligned if we're lucky
+        if (memory::alignment::isAddressAligned(raw_memory, Alignment))
         {
-            // store aligned memory address into aligned base address
-            *((void**)static_cast<char*>(raw_memory)) = raw_memory;
-
-            void* next_addr = static_cast<char*>(raw_memory) + sizeof(void*);
-
-            if (!memory::alignment::isAddressAligned(next_addr, alignment))
-            {
-                void* next_aligned_addr = memory::alignment::alignAddressUnsafe(raw_memory, alignment);
-
-                // return next aligned memory address just after base address
-                return static_cast<T*>(next_aligned_addr);
-            }
-
-            // return next aligned memory address just after base address
-            return static_cast<T*>(next_addr);
+            return storeAndAlign(raw_memory);
         }
 
-        void* aligned_addr = memory::alignment::alignAddressUnsafe(raw_memory, alignment);
-
-        // store un-aligned memory address into aligned base address
-        *((void**)static_cast<char*>(aligned_addr)) = aligned_addr;
-
-        // put base addr after sizeof(void*) so we have space to put raw_memory
-        void* next_addr = static_cast<char*>(aligned_addr) + sizeof(void*);
-
-        // check next_addr is aligned
-        if (!memory::alignment::isAddressAligned(next_addr, alignment))
+        void* advanced_addr = memory::alignment::advanceAddressByAlignment(raw_memory, Alignment);
+        if (advanced_addr == nullptr)
         {
-            void* next_aligned_addr = memory::alignment::alignAddressUnsafe(raw_memory, alignment);
-
-            // return next aligned memory address just after base address
-            return static_cast<T*>(next_aligned_addr);
+            ::operator delete[](raw_memory);
+            return nullptr;
         }
-        // return next aligned memory address just after base address
-        return static_cast<T*>(next_addr);
+
+        return storeAndAlign(advanced_addr);
     }
 
     /**
      *  @brief  Deallocate memory.
      *  @param  ptr  Pointer to the memory to deallocate.
      *  @param  n  The number of objects space was allocated for.
-     *
      */
     void deallocate(T* ptr, const size_t n) noexcept
     {
         if (ptr != nullptr)
         {
             // retrieve un-aligned memory address just before aligned base address
-            T* raw_memory = static_cast<T*>(*((void**)(reinterpret_cast<char*>(ptr) - sizeof(void*))));
-
-            if (raw_memory == nullptr)
+            void* un_aligned_addr = memory::alignment::rewindAddressByAlignment(ptr, Alignment);
+            if (un_aligned_addr == nullptr)
             {
-                // somethings went wrong! (raw memory may corruped or overrided!)
-                ::operator delete(ptr, n * sizeof(T));
+                // something's went wrong! (raw memory may corrupt or override!)
+                ::operator delete[](ptr, n * sizeof(T));
                 return;
             }
-
-            ::operator delete(raw_memory, n * sizeof(T));
-        }
-    }
-
-    void deallocate(T* ptr) noexcept
-    {
-        if (ptr != nullptr)
-        {
-            // retrieve un-aligned memory address just before aligned base address
-            T* raw_memory = static_cast<T*>(*((void**)(reinterpret_cast<char*>(ptr) - sizeof(void*))));
-
-            if (raw_memory == nullptr)
-            {
-                // somethings went wrong! (raw memory may corruped or overrided!)
-                ::operator delete(ptr);
-                return;
-            }
-
-            ::operator delete(raw_memory);
+            ::operator delete[](static_cast<T*>(un_aligned_addr), n * sizeof(T));
         }
     }
 
@@ -148,25 +97,45 @@ public:
     };
 
     template <typename U, typename... Args>
-    void construct(U* ptr, Args&&... values)
+    void construct(U* addr, Args&&... args)
     {
-        if (ptr != nullptr)
+        if (addr != nullptr)
         {
-            new (ptr) U{std::forward<Args>(values)...};  // construct at
+            new (addr) U{std::forward<Args>(args)...};  // construct at
         }
     }
 
     template <typename U>
-    void destroy(U* ptr)
+    void destroy(U* addr)
     {
-        if (ptr != nullptr)
+        if (addr != nullptr)
         {
-            ptr->~U();
+            addr->~U();
         }
     }
 
-private:
-    size_t alignment_{0};
+    T* storeAndAlign(void* addr)
+    {
+        // store aligned memory address into aligned base address
+        *((void**)static_cast<char*>(addr)) = addr;
+
+        void* advanced_addr = memory::alignment::advanceAddressByAlignment(addr, Alignment);
+        if (advanced_addr == nullptr)
+        {
+            ::operator delete[](addr);
+            return nullptr;
+        }
+
+        if (!memory::alignment::isAddressAligned(advanced_addr, Alignment))
+        {
+            // still?!
+            ::operator delete[](addr);
+            return nullptr;
+        }
+
+        // return next aligned memory address just after base address
+        return static_cast<T*>(advanced_addr);
+    }
 };
 
 }  // namespace erturk::allocator

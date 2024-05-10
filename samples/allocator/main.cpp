@@ -6,14 +6,35 @@
 int main()
 {
     {
-        erturk::allocator::AlignedSystemAllocator<int> allocator{};
-        int* ptr = allocator.allocate(27);
+        erturk::allocator::AlignedSystemAllocator<int, 16> allocator{};
 
-        int* ptr2 = allocator.allocate(57);
+        int* buffer1 = allocator.allocate(200);
+        std::cout << "********* buffer1 ********* \n";
+        for (int i = 0; i < 200; i++)
+        {
+            allocator.construct(&buffer1[i], i);
+            std::cout << "Addr: " << &buffer1[i] << " - value: " << buffer1[i] << "\n";
+        }
 
+        int* buffer2 = allocator.allocate(400);
+        std::cout << "********* buffer2 ********* \n";
+        for (int i = 0; i < 400; i++)
+        {
+            allocator.construct(&buffer2[i], i);
+            std::cout << "Addr: " << &buffer2[i] << " - value: " << buffer2[i] << "\n";
+        }
 
-        allocator.deallocate(ptr, 27);
-        allocator.deallocate(ptr2, 57);
+        int* buffer3 = allocator.allocate(1000);
+        std::cout << "********* buffer3 ********* \n";
+        for (int i = 0; i < 1000; i++)
+        {
+            allocator.construct(&buffer3[i], i);
+            std::cout << "Addr: " << &buffer3[i] << " - value: " << buffer3[i] << "\n";
+        }
+
+        allocator.deallocate(buffer1, 200);
+        allocator.deallocate(buffer2, 400);
+        allocator.deallocate(buffer3, 1000);
     }
 
     {
