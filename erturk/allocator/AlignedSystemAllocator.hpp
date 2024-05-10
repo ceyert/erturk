@@ -35,18 +35,18 @@ public:
 
     constexpr ~AlignedSystemAllocator() noexcept = default;
 
-    pointer_type allocate(const size_t count)
+    pointer_type allocate(const size_t count) noexcept
     {
         if (count == 0)
         {
             return nullptr;
         }
 
-        size_t total_required_size = (count * sizeof(T));
+        const size_t total_required_size = ((count * sizeof(T)) + sizeof(void*));  // add additional addr space
 
-        size_t rounded_total_size = memory::alignment::advanceSizeByAlignment(total_required_size, Alignment);
+        const size_t rounded_total_size = memory::alignment::advanceSizeByAlignment(total_required_size, Alignment);
 
-        void* raw_memory = ::operator new[](rounded_total_size);
+        void* raw_memory = std::malloc(rounded_total_size);
 
         if (raw_memory == nullptr)
         {
@@ -62,7 +62,7 @@ public:
         void* advanced_addr = memory::alignment::advanceAddressByAlignment(raw_memory, Alignment);
         if (advanced_addr == nullptr)
         {
-            ::operator delete[](raw_memory);
+            std::free(static_cast<void*>(raw_memory));
             return nullptr;
         }
 
@@ -74,7 +74,7 @@ public:
      *  @param  ptr  Pointer to the memory to deallocate.
      *  @param  n  The number of objects space was allocated for.
      */
-    void deallocate(T* ptr, const size_t n) noexcept
+    void deallocate(T* ptr, const size_t) noexcept
     {
         if (ptr != nullptr)
         {
@@ -83,10 +83,26 @@ public:
             if (un_aligned_addr == nullptr)
             {
                 // something's went wrong! (raw memory may corrupt or override!)
-                ::operator delete[](ptr, n * sizeof(T));
+                std::free(static_cast<T*>(ptr));
                 return;
             }
-            ::operator delete[](static_cast<T*>(un_aligned_addr), n * sizeof(T));
+            std::free(static_cast<T*>(un_aligned_addr));
+        }
+    }
+
+    void deallocate(T* ptr) noexcept
+    {
+        if (ptr != nullptr)
+        {
+            // retrieve un-aligned memory address just before aligned base address
+            void* un_aligned_addr = memory::alignment::rewindAddressByAlignment(ptr, Alignment);
+            if (un_aligned_addr == nullptr)
+            {
+                // something's went wrong! (raw memory may corrupt or override!)
+                std::free(static_cast<T*>(ptr));
+                return;
+            }
+            std::free(static_cast<T*>(un_aligned_addr));
         }
     }
 
@@ -117,19 +133,19 @@ public:
     T* storeAndAlign(void* addr)
     {
         // store aligned memory address into aligned base address
-        *((void**)static_cast<char*>(addr)) = addr;
+        *((void**)static_cast<unsigned char*>(addr)) = addr;
 
         void* advanced_addr = memory::alignment::advanceAddressByAlignment(addr, Alignment);
         if (advanced_addr == nullptr)
         {
-            ::operator delete[](addr);
+            std::free(static_cast<void*>(addr));
             return nullptr;
         }
 
         if (!memory::alignment::isAddressAligned(advanced_addr, Alignment))
         {
             // still?!
-            ::operator delete[](addr);
+            std::free(static_cast<void*>(addr));
             return nullptr;
         }
 
