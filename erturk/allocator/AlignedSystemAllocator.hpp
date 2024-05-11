@@ -35,14 +35,15 @@ public:
 
     constexpr ~AlignedSystemAllocator() noexcept = default;
 
-    pointer_type allocate(const size_t count) noexcept
+    static pointer_type allocate(const size_t count) noexcept
     {
         if (count == 0)
         {
             return nullptr;
         }
 
-        const size_t total_required_size = ((count * sizeof(T)) + sizeof(void*));  // add additional space for storing un-aligned address
+        const size_t total_required_size =
+            ((count * sizeof(T)) + sizeof(void*));  // add additional space for storing un-aligned address
 
         const size_t rounded_total_size = memory::alignment::advanceSizeByAlignment(total_required_size, Alignment);
 
@@ -74,7 +75,7 @@ public:
      *  @param  ptr  Pointer to the memory to deallocate.
      *  @param  n  The number of objects space was allocated for.
      */
-    void deallocate(T* ptr, const size_t) noexcept
+    static void deallocate(T* ptr, const size_t) noexcept
     {
         if (ptr != nullptr)
         {
@@ -90,7 +91,7 @@ public:
         }
     }
 
-    void deallocate(T* ptr) noexcept
+    static void deallocate(T* ptr) noexcept
     {
         if (ptr != nullptr)
         {
@@ -113,7 +114,7 @@ public:
     };
 
     template <typename U, typename... Args>
-    void construct(U* addr, Args&&... args)
+    static void construct(U* addr, Args&&... args)
     {
         if (addr != nullptr)
         {
@@ -122,7 +123,7 @@ public:
     }
 
     template <typename U>
-    void destroy(U* addr)
+    static void destroy(U* addr)
     {
         if (addr != nullptr)
         {
@@ -130,7 +131,8 @@ public:
         }
     }
 
-    T* storeAndAlign(void* addr)
+private:
+    static T* storeAndAlign(void* addr)
     {
         // store aligned memory address into aligned base address
         *((void**)static_cast<unsigned char*>(addr)) = addr;

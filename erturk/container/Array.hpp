@@ -1,15 +1,18 @@
 #ifndef ERTURK_CONTAINER_ARRAY_H
 #define ERTURK_CONTAINER_ARRAY_H
 
+#include "../meta_types/TypeTrait.hpp"
 #include <stdexcept>
+#include <utility>
 
-namespace erturk
-{
-namespace container
+namespace erturk::container
 {
 template <typename T, const std::size_t SIZE>
 class Array
 {
+    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                  "T must be copy constructible or move constructible!");
+
 public:
     constexpr Array()
     {
@@ -57,11 +60,11 @@ public:
         }
     }
 
-    constexpr Array& operator=(const Array& other) 
+    constexpr Array& operator=(const Array& other)
     {
-        if (this != &other) 
+        if (this != &other)
         {
-            for (std::size_t i = 0; i < SIZE; ++i) 
+            for (std::size_t i = 0; i < SIZE; ++i)
             {
                 buffer_[i] = other.buffer_[i];
             }
@@ -69,11 +72,11 @@ public:
         return *this;
     }
 
-    constexpr Array& operator=(Array&& other) noexcept 
+    constexpr Array& operator=(Array&& other) noexcept
     {
-        if (this != &other) 
+        if (this != &other)
         {
-            for (std::size_t i = 0; i < SIZE; i++) 
+            for (std::size_t i = 0; i < SIZE; i++)
             {
                 buffer_[i] = std::move(other.buffer_[i]);
             }
@@ -263,7 +266,6 @@ public:
         return ConstIterator(buffer_ + SIZE);
     }
 };
-}  // namespace container
-}  // namespace erturk
+}  // namespace erturk::container
 
 #endif  // ERTURK_CONTAINER_ARRAY_H

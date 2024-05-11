@@ -5,9 +5,7 @@
 #include <cstdint>
 #include <stdexcept>
 
-namespace erturk
-{
-namespace memory
+namespace erturk::memory
 {
 
 inline void* memmove(void* destination, const void* source, const size_t size)
@@ -17,26 +15,27 @@ inline void* memmove(void* destination, const void* source, const size_t size)
         return nullptr;
     }
 
-    char* dest = static_cast<char*>(destination);
-    const char* src = static_cast<const char*>(source);
+    char* dest_base = static_cast<char*>(destination);
+    const char* src_base = static_cast<const char*>(source);
 
     // check source and destination memory regions overlap
-    if (src < dest && dest < src + size)
+    if ((src_base < dest_base) && (dest_base < src_base + size)) // overlap
     {
         // copy from end to start to avoid overwriting
         size_t idx = size;
-        while (idx-- > 0)
+        while (idx > 0)
         {
-            dest[idx] = src[idx];
+            dest_base[idx] = src_base[idx];
+            idx--;
         }
     }
-    else
+    else // no overlap
     {
         // copy from start to end
         size_t idx = 0;
         while (idx < size)
         {
-            dest[idx] = src[idx];
+            dest_base[idx] = src_base[idx];
             ++idx;
         }
     }
@@ -102,7 +101,6 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
     return 0;
 }
 
-}  // namespace memory
-}  // namespace erturk
+}  // namespace erturk::memory
 
 #endif  // ERTURK_MEMORY_H
