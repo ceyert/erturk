@@ -17,9 +17,9 @@ int main()
             vec.push_back(i);
         }
 
-        for (int i = 0; i < vec.size(); i++)
+        for (int i : vec)
         {
-            std::cout << vec[i] << " ";
+            std::cout << i << " ";
         }
         std::cout << std::endl;
     }
@@ -59,14 +59,14 @@ int main()
         erturk::container::DynamicArray<std::string> moved = std::move(original);
 
         std::cout << "Copied array: ";
-        for (auto& s : copy)
+        for (const std::string& s : copy)
         {
             std::cout << s << " ";
         }
         std::cout << std::endl;
 
         std::cout << "Moved array: ";
-        for (auto& s : moved)
+        for (const std::string& s : moved)
         {
             std::cout << s << " ";
         }
@@ -79,7 +79,7 @@ int main()
         characters.push_back('C');
         characters.insert(characters.begin(), 'B');
 
-        for (auto c : characters)
+        for (char c : characters)
         {
             std::cout << c << " ";
         }
@@ -87,7 +87,7 @@ int main()
 
         characters.erase(characters.begin());  // Erase 'B'
 
-        for (auto c : characters)
+        for (char c : characters)
         {
             std::cout << c << " ";
         }

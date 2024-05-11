@@ -7,11 +7,15 @@
 namespace erturk::type_buffer_memory
 {
 
-template <class T, class T_Iter>
-inline constexpr T_Iter emplace_type_buffers_copy(T_Iter emplaced_src_begin, const T_Iter emplaced_src_end,
-                                                  T_Iter type_buffer_dest_begin)
+template <class T, class T_Iterator>
+inline constexpr T_Iterator emplace_type_buffers_copy(T_Iterator emplaced_src_begin, const T_Iterator emplaced_src_end,
+                                                      const T_Iterator type_buffer_dest_begin)
 {
-    T_Iter curr_type_buffer = type_buffer_dest_begin;
+    if (emplaced_src_begin == nullptr || emplaced_src_end == nullptr || type_buffer_dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
     try
     {
         while (emplaced_src_begin != emplaced_src_end)
@@ -21,8 +25,8 @@ inline constexpr T_Iter emplace_type_buffers_copy(T_Iter emplaced_src_begin, con
             ::new (static_cast<void*>(&*curr_type_buffer))
                 T{*emplaced_src_begin};  // Emplace T copy constructor into address
 
-            ++emplaced_src_begin;  // increase to next T memory layout
-            ++curr_type_buffer;    // increase to next T memory layout
+            emplaced_src_begin++;  // increase to next T memory layout
+            curr_type_buffer++;    // increase to next T memory layout
         }
         return curr_type_buffer;
     }
@@ -30,17 +34,22 @@ inline constexpr T_Iter emplace_type_buffers_copy(T_Iter emplaced_src_begin, con
     {
         while (curr_type_buffer != type_buffer_dest_begin)
         {
-            --curr_type_buffer;      // rollback constructed type buffer to begin
+            curr_type_buffer--;      // rollback constructed type buffer to begin
             curr_type_buffer->~T();  // call already constructed type buffer
         }
         throw;
     }
 }
 
-template <class T, class T_Iter, class Size>
-inline constexpr T_Iter emplace_type_buffers_copy_n(T_Iter emplaced_src_begin, Size size, T_Iter type_buffer_dest_begin)
+template <class T, class T_Iterator, class Size>
+inline constexpr T_Iterator emplace_type_buffers_copy_n(T_Iterator emplaced_src_begin, Size size,
+                                                        const T_Iterator type_buffer_dest_begin)
 {
-    T_Iter curr_type_buffer = type_buffer_dest_begin;
+    if (emplaced_src_begin == nullptr || size <= 0 || type_buffer_dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
     try
     {
         while (size > 0)
@@ -50,8 +59,8 @@ inline constexpr T_Iter emplace_type_buffers_copy_n(T_Iter emplaced_src_begin, S
             ::new (static_cast<void*>(&*curr_type_buffer))
                 T{*emplaced_src_begin};  // Emplace T with copy constructor from emplaced T into address
 
-            ++emplaced_src_begin;  // increase to next T memory layout
-            ++curr_type_buffer;    // increase to next T memory layout
+            emplaced_src_begin++;  // increase to next T memory layout
+            curr_type_buffer++;    // increase to next T memory layout
             size--;
         }
         return curr_type_buffer;
@@ -60,17 +69,22 @@ inline constexpr T_Iter emplace_type_buffers_copy_n(T_Iter emplaced_src_begin, S
     {
         while (curr_type_buffer != type_buffer_dest_begin)
         {
-            --curr_type_buffer;      // rollback constructed type buffer to begin
+            curr_type_buffer--;      // rollback constructed type buffer to begin
             curr_type_buffer->~T();  // call already constructed type buffer
         }
         throw;
     }
 }
 
-template <class T, class T_Iter>
-void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest_end, const T& value)
+template <class T, class T_Iterator>
+inline constexpr T_Iterator emplace_type_buffers(const T_Iterator type_buffer_dest_begin,
+                                                 const T_Iterator type_buffer_dest_end, const T& value)
 {
-    T_Iter curr_type_buffer = type_buffer_dest_begin;
+    if (type_buffer_dest_begin == nullptr || type_buffer_dest_end == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
     try
     {
         while (curr_type_buffer != type_buffer_dest_end)
@@ -79,7 +93,7 @@ void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest
             // buffer(char buffer)
             ::new (static_cast<void*>(&*curr_type_buffer)) T{value};  // Emplace T copy constructor into address
 
-            ++curr_type_buffer;  // increase to next T memory layout
+            curr_type_buffer++;  // increase to next T memory layout
         }
         return curr_type_buffer;
     }
@@ -87,17 +101,54 @@ void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest
     {
         while (curr_type_buffer != type_buffer_dest_begin)
         {
-            --curr_type_buffer;      // rollback constructed type buffer to begin
+            curr_type_buffer--;      // rollback constructed type buffer to begin
             curr_type_buffer->~T();  // call already constructed type buffer
         }
         throw;
     }
 }
 
-template <class T, class T_Iter, class... Args>
-void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest_end, Args... args)
+template <class T, class T_Iterator, class Size>
+inline constexpr T_Iterator emplace_type_buffers_n(const T_Iterator type_buffer_dest_begin, Size size, const T& value)
 {
-    T_Iter curr_type_buffer = type_buffer_dest_begin;
+    if (type_buffer_dest_begin == nullptr || size <= 0)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
+    try
+    {
+        while (size > 0)
+        {
+            // Unlike copy(*dest_first = *src_first), curr_type_buffer can not be dereferenced since it's type
+            // buffer(char buffer)
+            ::new (static_cast<void*>(&*curr_type_buffer)) T{value};  // Emplace T copy constructor into address
+
+            curr_type_buffer++;  // increase to next T memory layout
+            size++;
+        }
+        return curr_type_buffer;
+    }
+    catch (...)
+    {
+        while (curr_type_buffer != type_buffer_dest_begin)
+        {
+            curr_type_buffer--;      // rollback constructed type buffer to begin
+            curr_type_buffer->~T();  // call already constructed type buffer
+        }
+        throw;
+    }
+}
+
+template <class T, class T_Iterator, class... Args>
+inline constexpr T_Iterator emplace_type_buffers(const T_Iterator type_buffer_dest_begin, const T_Iterator type_buffer_dest_end,
+                                                 Args&&... args)
+{
+    if (type_buffer_dest_begin == nullptr || type_buffer_dest_end == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
     try
     {
         while (curr_type_buffer != type_buffer_dest_end)
@@ -106,7 +157,7 @@ void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest
             // buffer(char buffer)
             ::new (static_cast<void*>(&*curr_type_buffer)) T{std::forward<Args>(args)...};  // Emplace T into address
 
-            ++curr_type_buffer;  // increase to next T memory layout
+            curr_type_buffer++;  // increase to next T memory layout
         }
         return curr_type_buffer;
     }
@@ -114,7 +165,39 @@ void emplace_type_buffers(T_Iter type_buffer_dest_begin, T_Iter type_buffer_dest
     {
         while (curr_type_buffer != type_buffer_dest_begin)
         {
-            --curr_type_buffer;      // rollback constructed type buffer to begin
+            curr_type_buffer--;      // rollback constructed type buffer to begin
+            curr_type_buffer->~T();  // call already constructed type buffer
+        }
+        throw;
+    }
+}
+
+template <class T, class T_Iterator, class Size, class... Args>
+inline constexpr T_Iterator emplace_type_buffers_n(const T_Iterator type_buffer_dest_begin, Size size, Args&&... args)
+{
+    if (type_buffer_dest_begin == nullptr || size <= 0)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_type_buffer = type_buffer_dest_begin;
+    try
+    {
+        while (size > 0)
+        {
+            // Unlike copy(*dest_first = *src_first), curr_type_buffer can not be dereferenced since it's type
+            // buffer(char buffer)
+            ::new (static_cast<void*>(&*curr_type_buffer)) T{std::forward<Args>(args)...};  // Emplace T into address
+
+            curr_type_buffer++;  // increase to next T memory layout
+            size++;
+        }
+        return curr_type_buffer;
+    }
+    catch (...)
+    {
+        while (curr_type_buffer != type_buffer_dest_begin)
+        {
+            curr_type_buffer--;      // rollback constructed type buffer to begin
             curr_type_buffer->~T();  // call already constructed type buffer
         }
         throw;
