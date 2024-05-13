@@ -99,6 +99,7 @@ private:
             T* new_resource_ptr = newCopy(old_resource_control->resource_ptr_);
             if (new_resource_ptr == nullptr)
             {
+                release_resource_if();
                 throw;
             }
             // Allocate new resource control
