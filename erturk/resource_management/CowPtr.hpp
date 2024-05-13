@@ -1,7 +1,9 @@
 #ifndef ERTURK_COW_PTR_H
 #define ERTURK_COW_PTR_H
 
+#include "../meta_types/TypeTrait.hpp"
 #include <atomic>
+#include <utility>
 
 namespace erturk::resource_management
 {
@@ -135,7 +137,6 @@ private:
     ResourceControl_* resource_control_ptr_{nullptr};
 };
 
-
 template <class T, T*(newCopy)(const T*)>
 class CowPtr<T[], newCopy> final
 {
@@ -268,6 +269,32 @@ private:
 
 template <class T, T*(newCopy)(const T*)>
 using CowArray = CowPtr<T[], newCopy>;
+
+template <class T>
+inline constexpr T* makeNewCopy(const T* oldAddr)
+{
+    if constexpr (erturk::meta::is_copy_constructible<T>::value)
+    {
+        return new T{*oldAddr};
+    }
+    else if constexpr (erturk::meta::is_move_constructible<T>::value)
+    {
+        return new T{std::move(*oldAddr)};
+    }
+    throw;
+}
+
+template <class T, T*(newCopy)(const T*) = makeNewCopy, class... Args>
+inline CowPtr<T, newCopy>&& makeCowPtr(Args&&... args) noexcept(false)
+{
+    return CowPtr<T, newCopy>{new T{std::forward<Args>(args)...}};
+}
+
+template <class T, T*(newCopy)(const T*) = makeNewCopy, class... Args>
+inline CowArray<T, newCopy>&& makeCowArray(const size_t count, Args&&... args) noexcept(false)
+{
+    return CowArray<T, newCopy>{new T[count]{std::forward<Args>(args)...}};
+}
 
 }  // namespace erturk::resource_management
 
