@@ -290,7 +290,7 @@ inline CowPtr<T, newCopy>&& makeCowPtr(Args&&... args) noexcept(false)
     return CowPtr<T, newCopy>{new T{std::forward<Args>(args)...}};
 }
 
-template <class T, T*(newCopy)(const T*) = makeNewCopy, class... Args>
+template <class T, T*(newCopy)(const T*), class... Args>
 inline CowArray<T, newCopy>&& makeCowArray(const size_t count, Args&&... args) noexcept(false)
 {
     return CowArray<T, newCopy>{new T[count]{std::forward<Args>(args)...}};
