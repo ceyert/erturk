@@ -4,7 +4,7 @@
 #include "../../meta_types/TypeTrait.hpp"
 #include <cstdint>
 
-namespace erturk::atomic
+namespace erturk::experimental::atomic
 {
 
 typedef enum class memory_order
@@ -996,6 +996,6 @@ private:
     T value_{};
 };
 
-}  // namespace erturk::atomic
+}  // namespace erturk::experimental::atomic
 
 #endif  // ERTURK_ATOMIC_H

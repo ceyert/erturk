@@ -4,7 +4,7 @@
 int main()
 {
     {
-        erturk::atomic::Atomic<int> atomicInt(0);
+        erturk::experimental::atomic::Atomic<int> atomicInt(0);
         std::cout << "Initial value: " << atomicInt.load() << std::endl;
 
         atomicInt.increment();
@@ -32,35 +32,37 @@ int main()
 
     {
         // Usage of memory fence to ensure correct order of operations
-        erturk::atomic::atomic_memory_fence(erturk::atomic::memory_order::memory_order_acquire);
+        erturk::experimental::atomic::atomic_memory_fence(
+            erturk::experimental::atomic::memory_order::memory_order_acquire);
 
         std::cout << "Critical operations are safely executed after the fence.\n";
 
-        erturk::atomic::atomic_memory_fence(erturk::atomic::memory_order::memory_order_release);
+        erturk::experimental::atomic::atomic_memory_fence(
+            erturk::experimental::atomic::memory_order::memory_order_release);
     }
 
     {
         int value = 0;
-        erturk::atomic::atomic_increment(value);
+        erturk::experimental::atomic::atomic_increment(value);
         std::cout << "Value after atomic increment: " << value << std::endl;
     }
 
     {
         int value = 10;
-        erturk::atomic::atomic_decrement(value);
+        erturk::experimental::atomic::atomic_decrement(value);
         std::cout << "Value after atomic decrement: " << value << std::endl;
     }
 
     {
         int value = 10;
-        erturk::atomic::atomic_add(value, 5);
+        erturk::experimental::atomic::atomic_add(value, 5);
         std::cout << "Value after atomic add: " << value << std::endl;
     }
 
     {
         int oldValue = 10;
         int newValue = 20;
-        int result = erturk::atomic::atomic_exchange(oldValue, newValue);
+        int result = erturk::experimental::atomic::atomic_exchange(oldValue, newValue);
         std::cout << "Old value: " << result << ", New value: " << oldValue << std::endl;
     }
 
@@ -68,26 +70,26 @@ int main()
         int value = 100;
         int expected = 100;
         int desired = 200;
-        bool success = erturk::atomic::atomic_compare_and_exchange_strong(value, expected, desired);
+        bool success = erturk::experimental::atomic::atomic_compare_and_exchange_strong(value, expected, desired);
         std::cout << "Operation successful: " << std::boolalpha << success << ", New value: " << value << std::endl;
     }
 
     {
         int value = 20;
-        erturk::atomic::atomic_subtract(value, 5);
+        erturk::experimental::atomic::atomic_subtract(value, 5);
         std::cout << "Value after atomic subtract: " << value << std::endl;
     }
 
     {
         int value = 30;
         int addValue = 10;
-        int original = erturk::atomic::atomic_fetch_and_add(value, addValue);
+        int original = erturk::experimental::atomic::atomic_fetch_and_add(value, addValue);
         std::cout << "Original value: " << original << ", New value: " << value << std::endl;
     }
 
     {
         bool lock = false;
-        bool wasLocked = erturk::atomic::atomic_test_and_set(lock);
+        bool wasLocked = erturk::experimental::atomic::atomic_test_and_set(lock);
         std::cout << "Was locked: " << std::boolalpha << wasLocked << std::endl;
         std::cout << "Lock status: " << std::boolalpha << lock << std::endl;
     }
@@ -96,7 +98,7 @@ int main()
         int value = 300;
         int oldVal = 300;
         int newVal = 500;
-        bool success = erturk::atomic::atomic_compare_and_swap(value, oldVal, newVal);
+        bool success = erturk::experimental::atomic::atomic_compare_and_swap(value, oldVal, newVal);
         std::cout << "Operation successful: " << std::boolalpha << success << ", New value: " << value << std::endl;
     }
 

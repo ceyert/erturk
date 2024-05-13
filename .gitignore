@@ -8,3 +8,4 @@
 # In-source cmake build output directories
 build*
 cmake-build*
+container.*
