@@ -281,7 +281,7 @@ inline constexpr T* makeNewCopy(const T* oldAddr)
     {
         return new T{std::move(*oldAddr)};
     }
-    throw;
+    throw; // use needs to manually apply deep copy
 }
 
 template <class T, T*(newCopy)(const T*) = makeNewCopy, class... Args>
