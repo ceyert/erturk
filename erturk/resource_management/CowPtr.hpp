@@ -10,6 +10,9 @@ namespace erturk::resource_management
 template <class T, T*(newCopy)(const T*)>
 class CowPtr final
 {
+    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                  "T must be copy constructible or move constructible!");
+
 public:
     explicit CowPtr(const T* resource_ptr) : resource_control_ptr_{new ResourceControl_{resource_ptr}} {}
 
@@ -138,9 +141,12 @@ private:
     ResourceControl_* resource_control_ptr_{nullptr};
 };
 
-template <class T, T*(newCopy)(const T*)>
+template <class T, T*(newCopy)(const T*, size_t)>
 class CowPtr<T[], newCopy> final
 {
+    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                  "T must be copy constructible or move constructible!");
+
 public:
     explicit CowPtr(const T* ptrToBuffer) : resource_control_ptr_{new ResourceControl_{ptrToBuffer}} {}
 
@@ -272,28 +278,40 @@ template <class T, T*(newCopy)(const T*)>
 using CowArray = CowPtr<T[], newCopy>;
 
 template <class T>
-inline constexpr T* makeNewCopy(const T* oldAddr)
+inline T* makeNewCopy(const T* oldAddr)
 {
     if constexpr (erturk::meta::is_copy_constructible<T>::value)
     {
         return new T{*oldAddr};
     }
-    else if constexpr (erturk::meta::is_move_constructible<T>::value)
+    return new T{std::move(*oldAddr)};
+}
+
+template <class T>
+inline T* makeNewArrayCopy(const T* oldAddr, size_t count)
+{
+    if constexpr (erturk::meta::is_copy_constructible<T>::value)
     {
-        return new T{std::move(*oldAddr)};
+        return new T[count]{*oldAddr};
     }
-    throw; // use needs to manually apply deep copy
+    return new T[count]{std::move(*oldAddr)};
 }
 
 template <class T, T*(newCopy)(const T*) = makeNewCopy, class... Args>
 inline CowPtr<T, newCopy>&& makeCowPtr(Args&&... args) noexcept(false)
 {
+    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                  "T must be copy constructible or move constructible!");
+
     return CowPtr<T, newCopy>{new T{std::forward<Args>(args)...}};
 }
 
-template <class T, T*(newCopy)(const T*), class... Args>
+template <class T, T*(newCopy)(const T*, size_t) = makeNewArrayCopy, class... Args>
 inline CowArray<T, newCopy>&& makeCowArray(const size_t count, Args&&... args) noexcept(false)
 {
+    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                  "T must be copy constructible or move constructible!");
+
     return CowArray<T, newCopy>{new T[count]{std::forward<Args>(args)...}};
 }
 
