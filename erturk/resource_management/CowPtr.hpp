@@ -109,7 +109,7 @@ private:
             // decrease old reference count
             old_resource_control->reference_count_.fetch_sub(1, std::memory_order_acq_rel);
 
-            T* new_resource_ptr = allocator.operator()(old_resource_control->resource_ptr_);
+            T* new_resource_ptr = allocator.operator()();
 
             if (new_resource_ptr == nullptr)
             {
