@@ -88,8 +88,18 @@ public:
         return read();
     }
 
+    [[nodiscard]] bool is_unique() const noexcept
+    {
+        return resource_control_ptr_->reference_count_.load(std::memory_order_acquire) == 1;
+    }
+
+    void detach() const
+    {
+        detach_resource_if();
+    }
+
 private:
-    void detach_resource_if()
+    void detach_resource_if() noexcept(false)
     {
         if (resource_control_ptr_->reference_count_.load(std::memory_order_acquire) > 1)
         {
@@ -222,8 +232,18 @@ public:
         return read();
     }
 
+    [[nodiscard]] bool is_unique() const noexcept
+    {
+        return resource_control_ptr_->reference_count_.load(std::memory_order_acquire) == 1;
+    }
+
+    void detach() const
+    {
+        detach_resource_if();
+    }
+
 private:
-    void detach_resource_if()
+    void detach_resource_if() noexcept(false)
     {
         if (resource_control_ptr_->reference_count_.load(std::memory_order_acquire) > 1)
         {
