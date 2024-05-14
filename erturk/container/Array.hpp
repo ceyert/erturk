@@ -10,53 +10,29 @@ namespace erturk::container
 template <typename T, const size_t SIZE>
 class Array final
 {
-    static_assert((erturk::meta::is_default_constructible<T>::value
-                   || erturk::meta::is_trivially_constructible<T>::value
-                   || erturk::meta::is_trivially_default_constructible<T>::value),
-                  "T must be default constructible!");
-
 public:
+    // Instantiate buffer_ in-place with default constructor
     constexpr Array()
     {
+        static_assert(
+            (erturk::meta::is_default_constructible<T>::value || erturk::meta::is_trivially_constructible<T>::value
+             || erturk::meta::is_trivially_default_constructible<T>::value),
+            "T must be default constructible!");
+
         for (size_t idx = 0; idx < SIZE; idx++)
         {
             buffer_[idx] = T{};
         }
     }
 
-    template <typename... Args>
-    constexpr explicit Array(Args&&... args)
+    // Instantiate buffer_ in-place with copy constructor
+    template <typename... TypeSeq>
+    constexpr Array(const TypeSeq&... t_refs) : buffer_{T{t_refs}...}
     {
         static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                       "T must be copy constructible or move constructible!");
 
-        for (size_t idx = 0; idx < SIZE; idx++)
-        {
-            buffer_[idx] = T{std::forward<Args>(args)...};
-        }
-    }
-
-    Array(const std::initializer_list<T>& range) noexcept(false)
-    {
-        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
-                      "T must be copy constructible or move constructible!");
-
-        if (range.size() != SIZE)
-        {
-            throw;
-        }
-
-        const T* iter = range.begin();
-        for (size_t idx = 0; idx < SIZE; idx++)
-        {
-            buffer_[idx] = T{*(iter + idx)};
-        }
-    }
-
-    template <typename... Range>
-    constexpr Array(const Range&... range) : buffer_{T{range}...}
-    {
-        static_assert(sizeof...(Range) == SIZE, "Arguments does not match array size!");
+        static_assert(sizeof...(TypeSeq) == SIZE, "Arguments does not match array size!");
     }
 
     constexpr explicit Array(const T& val)
@@ -127,6 +103,27 @@ public:
         for (size_t idx = 0; idx < SIZE; idx++)
         {
             buffer_[idx].~T();
+        }
+    }
+
+    template <typename... Args>
+    constexpr void emplace(size_t pos, Args&&... args)
+    {
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        buffer_[pos] = T{std::forward<Args>(args)...};
+    }
+
+    template <typename... Args>
+    constexpr void emplaceAll(Args&&... args)
+    {
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        for (size_t idx = 0; idx < SIZE; idx++)
+        {
+            buffer_[idx] = T{std::forward<Args>(args)...};
         }
     }
 

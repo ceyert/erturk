@@ -1,3 +1,4 @@
+
 #include "../../erturk/container/Array.hpp"
 #include "../../erturk/container/DynamicArray.hpp"
 #include <iostream>
@@ -6,12 +7,12 @@ struct Point
 {
     int x, y;
 
-    explicit Point()
+    Point() = delete;
+
+    explicit Point(int px, int py) : x(px), y(py)
     {
         std::cout << "Point constructor" << "\n";
-    };
-
-    explicit Point(int px, int py) : x(px), y(py) {}
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, const Point& point)
@@ -22,65 +23,63 @@ std::ostream& operator<<(std::ostream& os, const Point& point)
 void array_examples()
 {
     {
-        erturk::container::Array<Point, 5> array1{5, 600};
-        for (const Point& element : array1)
+        erturk::container::Array<int, 5> array1{1, 2, 3, 4, 5};
+
+        try
+        {
+            std::cout << "Element at index 2: " << array1.at(2) << std::endl;
+            array1.at(2) = 30;
+            std::cout << "Modified element at index 2: " << array1.at(2) << std::endl;
+        }
+        catch (const std::out_of_range& e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
+
+        array1.fill(10);
+
+        for (const int& element : array1)
+        {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+
+        erturk::container::Array<int, 5> array2 = array1;
+        std::cout << "Copied array: ";
+        for (const int& element : array2)
+        {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+
+        erturk::container::Array<int, 5> array3 = std::move(array2);
+        std::cout << "Moved array: ";
+        for (const auto& element : array3)
         {
             std::cout << element << " ";
         }
         std::cout << std::endl;
     }
 
-    erturk::container::Array<int, 5> array1{1, 2, 3, 4, 5};
-
-    try
     {
-        std::cout << "Element at index 2: " << array1.at(2) << std::endl;
-        array1.at(2) = 30;
-        std::cout << "Modified element at index 2: " << array1.at(2) << std::endl;
-    }
-    catch (const std::out_of_range& e)
-    {
-        std::cerr << e.what() << std::endl;
+        erturk::container::Array<Point, 3> pointArray{Point{1, 2}, Point{3, 4}, Point{5, 6}};
+        pointArray.emplace(0, Point{5, 5});
     }
 
-    array1.fill(10);
-
-    for (const int& element : array1)
     {
-        std::cout << element << " ";
-    }
-    std::cout << std::endl;
+        erturk::container::Array<Point, 3> pointArray{Point{1, 2}, Point{3, 4}, Point{5, 6}};
 
-    erturk::container::Array<int, 5> array2 = array1;
-    std::cout << "Copied array: ";
-    for (const int& element : array2)
-    {
-        std::cout << element << " ";
-    }
-    std::cout << std::endl;
-
-    erturk::container::Array<int, 5> array3 = std::move(array2);
-    std::cout << "Moved array: ";
-    for (const auto& element : array3)
-    {
-        std::cout << element << " ";
-    }
-    std::cout << std::endl;
-
-    {
-        erturk::container::Array<Point, 3> points = {Point(1, 2), Point(3, 4), Point(5, 6)};
-
-        for (int i = 0; i < points.size(); ++i)
+        for (int i = 0; i < pointArray.size(); ++i)
         {
-            std::cout << "Point " << i + 1 << ": " << points[i] << std::endl;
+            std::cout << "Point " << i + 1 << ": " << pointArray[i] << std::endl;
         }
 
-        points[1] = Point(10, 20);
-        std::cout << "After modification, Point 2: " << points[1] << std::endl;
+        pointArray[1] = Point(10, 20);
+        std::cout << "After modification, Point 2: " << pointArray[1] << std::endl;
 
-        points.fill(Point(0, 0));
+        pointArray.fill(Point(0, 0));
         std::cout << "After filling all points with (0, 0):" << std::endl;
-        for (const Point& point : points)
+        for (const Point& point : pointArray)
         {
             std::cout << point << " ";
         }
