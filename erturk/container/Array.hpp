@@ -7,8 +7,8 @@
 
 namespace erturk::container
 {
-template <typename T, const std::size_t SIZE>
-class Array
+template <typename T, const size_t SIZE>
+class Array final
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
@@ -16,29 +16,23 @@ class Array
 public:
     constexpr Array()
     {
-        for (std::size_t i = 0; i < SIZE; i++)
+        static_assert(erturk::meta::is_trivially_default_constructible<T>::value, "T must be default constructible!");
+
+        for (size_t i = 0; i < SIZE; i++)
         {
             buffer_[i] = T{};
         }
     }
 
     template <typename... Args>
-    constexpr Array(Args... args) : buffer_{T{args}...}
+    constexpr explicit Array(const Args&... args) : buffer_{T{args}...}
     {
-        static_assert(sizeof...(Args) == SIZE, "Number of arguments does not match array size.");
+        static_assert(sizeof...(Args) == SIZE, "Arguments does not match array size!");
     }
 
-    constexpr Array(const T& val)
+    constexpr explicit Array(const T& val)
     {
-        for (std::size_t i = 0; i < SIZE; i++)
-        {
-            buffer_[i] = val;
-        }
-    }
-
-    constexpr Array(T&& val)
-    {
-        for (std::size_t i = 0; i < SIZE; i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             buffer_[i] = val;
         }
@@ -46,7 +40,7 @@ public:
 
     constexpr Array(const Array& other)
     {
-        for (std::size_t i = 0; i < SIZE; i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             buffer_[i] = other.buffer_[i];
         }
@@ -54,7 +48,7 @@ public:
 
     constexpr Array(Array&& other) noexcept
     {
-        for (std::size_t i = 0; i < SIZE; i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             buffer_[i] = std::move(other.buffer_[i]);
         }
@@ -64,7 +58,7 @@ public:
     {
         if (this != &other)
         {
-            for (std::size_t i = 0; i < SIZE; ++i)
+            for (size_t i = 0; i < SIZE; ++i)
             {
                 buffer_[i] = other.buffer_[i];
             }
@@ -76,7 +70,7 @@ public:
     {
         if (this != &other)
         {
-            for (std::size_t i = 0; i < SIZE; i++)
+            for (size_t i = 0; i < SIZE; i++)
             {
                 buffer_[i] = std::move(other.buffer_[i]);
             }
@@ -86,7 +80,7 @@ public:
 
     void fill(const T& value)
     {
-        for (std::size_t i = 0; i < SIZE; i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             buffer_[i] = value;
         }
@@ -110,7 +104,7 @@ public:
         fill(value);
     }
 
-    [[nodiscard]] T& at(std::size_t pos) noexcept(false)
+    [[nodiscard]] T& at(size_t pos) noexcept(false)
     {
         if (pos >= SIZE)
         {
@@ -119,7 +113,7 @@ public:
         return buffer_[pos];
     }
 
-    [[nodiscard]] const T& at(std::size_t pos) const noexcept(false)
+    [[nodiscard]] const T& at(size_t pos) const noexcept(false)
     {
         if (pos >= SIZE)
         {
@@ -128,12 +122,12 @@ public:
         return buffer_[pos];
     }
 
-    [[nodiscard]] T& operator[](std::size_t pos)
+    [[nodiscard]] T& operator[](size_t pos)
     {
         return buffer_[pos];
     }
 
-    [[nodiscard]] const T& operator[](std::size_t pos) const
+    [[nodiscard]] const T& operator[](size_t pos) const
     {
         return buffer_[pos];
     }
@@ -163,7 +157,7 @@ public:
         return SIZE == 0;
     }
 
-    [[nodiscard]] std::size_t size() const
+    [[nodiscard]] size_t size() const
     {
         return SIZE;
     }
@@ -175,95 +169,58 @@ public:
     class Iterator
     {
     public:
-        Iterator(T* ptr) : ptr_(ptr) {}
+        explicit Iterator(T* ptr) : t_ptr_(ptr) {}
 
         Iterator& operator++()
         {
-            ++ptr_;
+            t_ptr_++;
             return *this;
         }
 
         Iterator operator++(int)
         {
             Iterator temp = *this;
-            ++ptr_;
+            t_ptr_++;
             return temp;
         }
 
         bool operator==(const Iterator& other) const
         {
-            return ptr_ == other.ptr_;
+            return t_ptr_ == other.t_ptr_;
         }
 
         bool operator!=(const Iterator& other) const
         {
-            return ptr_ != other.ptr_;
+            return t_ptr_ != other.t_ptr_;
         }
 
         T& operator*()
         {
-            return *ptr_;
+            return *t_ptr_;
         }
 
     private:
-        T* ptr_;
-    };
-
-    class ConstIterator
-    {
-    public:
-        ConstIterator(const T* ptr) : ptr_(ptr) {}
-
-        ConstIterator& operator++()
-        {
-            ++ptr_;
-            return *this;
-        }
-
-        ConstIterator operator++(int)
-        {
-            ConstIterator temp = *this;
-            ++ptr_;
-            return temp;
-        }
-
-        bool operator==(const ConstIterator& other) const
-        {
-            return ptr_ == other.ptr_;
-        }
-
-        bool operator!=(const ConstIterator& other) const
-        {
-            return ptr_ != other.ptr_;
-        }
-
-        const T& operator*() const
-        {
-            return *ptr_;
-        }
-
-    private:
-        const T* ptr_;
+        T* t_ptr_;
     };
 
     [[nodiscard]] Iterator begin()
     {
-        return Iterator(buffer_);
+        return Iterator{buffer_};
     }
 
     [[nodiscard]] Iterator end()
     {
-        return Iterator(buffer_ + SIZE);
+        return Iterator{buffer_ + SIZE};
     }
 
-    [[nodiscard]] ConstIterator begin() const
+    [[nodiscard]] Iterator begin() const
     {
-        return ConstIterator(buffer_);
+        return Iterator{buffer_};
     }
 
-    [[nodiscard]] ConstIterator end() const
+    [[nodiscard]] Iterator end() const
     {
-        return ConstIterator(buffer_ + SIZE);
+        return Iterator{buffer_ + SIZE};
     }
 };
 }  // namespace erturk::container

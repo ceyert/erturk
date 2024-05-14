@@ -166,14 +166,14 @@ public:
 
         Iterator& operator++()
         {
-            ++t_ptr_;
+            t_ptr_++;
             return *this;
         }
 
         Iterator operator++(int)
         {
             Iterator temp = *this;
-            ++t_ptr_;
+            t_ptr_++;
             return temp;
         }
 

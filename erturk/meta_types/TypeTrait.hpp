@@ -334,7 +334,9 @@ struct get_type_impl<0, First, Rest...>
     using type = First;
 };
 
-// Use GCC built-in type traits
+// ****************************************************************
+// Use GCC built-in type traits : https://gcc.gnu.org/onlinedocs/gcc-12.3.0/libstdc++/api/a01587.html
+
 template <typename T>
 struct has_nothrow_assign_impl : integral_constant_impl<bool, __has_nothrow_assign(T)>
 {
@@ -421,12 +423,36 @@ struct is_standard_layout_impl : integral_constant_impl<bool, __is_standard_layo
 };
 
 template <typename T>
+struct is_trivially_constructible_impl : std::integral_constant<bool, __is_trivially_constructible(T)>
+{
+};
+template <typename T>
 struct is_copy_constructible_impl : integral_constant_impl<bool, __is_constructible(T, const T&)>
 {
 };
 
 template <typename T>
 struct is_move_constructible_impl : integral_constant_impl<bool, __is_constructible(T, T&&)>
+{
+};
+
+template <typename T>
+struct is_trivially_assignable_impl : std::integral_constant<bool, __is_trivially_assignable(T, T)>
+{
+};
+
+template <typename T>
+struct is_trivially_copy_assignable_impl : std::integral_constant<bool, __is_trivially_assignable(T, const T&)>
+{
+};
+
+template <typename T>
+struct is_trivially_copy_constructible_impl : std::integral_constant<bool, __is_trivially_constructible(T, const T&)>
+{
+};
+
+template <typename T>
+struct is_trivially_default_constructible_impl : std::integral_constant<bool, __is_trivially_constructible(T)>
 {
 };
 
@@ -537,51 +563,6 @@ template <size_t Index, typename... Types>
 using get_type_t = typename get_type<Index, Types...>::type;
 
 template <typename T>
-struct has_nothrow_assign : detail::has_nothrow_assign_impl<T>
-{
-};
-
-template <typename T>
-struct has_nothrow_copy : detail::has_nothrow_copy_impl<T>
-{
-};
-
-template <typename T>
-struct has_nothrow_constructor : detail::has_nothrow_constructor_impl<T>
-{
-};
-
-template <typename T>
-struct has_trivial_assign : detail::has_trivial_assign_impl<T>
-{
-};
-
-template <typename T>
-struct has_trivial_copy : detail::has_trivial_copy_impl<T>
-{
-};
-
-template <typename T>
-struct has_trivial_constructor : detail::has_trivial_constructor_impl<T>
-{
-};
-
-template <typename T>
-struct has_trivial_destructor : detail::has_trivial_destructor_impl<T>
-{
-};
-
-template <typename T>
-struct is_trivial : detail::is_trivial_impl<T>
-{
-};
-
-template <typename T>
-struct is_trivially_copyable : detail::is_trivially_copyable_impl<T>
-{
-};
-
-template <typename T>
 struct is_abstract : detail::is_abstract_impl<T>
 {
 };
@@ -628,6 +609,76 @@ struct is_copy_constructible : detail::is_copy_constructible_impl<T>
 
 template <typename T>
 struct is_move_constructible : detail::is_move_constructible_impl<T>
+{
+};
+
+template <typename T>
+struct has_nothrow_assign : detail::has_nothrow_assign_impl<T>
+{
+};
+
+template <typename T>
+struct has_nothrow_copy : detail::has_nothrow_copy_impl<T>
+{
+};
+
+template <typename T>
+struct has_nothrow_constructor : detail::has_nothrow_constructor_impl<T>
+{
+};
+
+template <typename T>
+struct has_trivial_assign : detail::has_trivial_assign_impl<T>
+{
+};
+
+template <typename T>
+struct has_trivial_copy : detail::has_trivial_copy_impl<T>
+{
+};
+
+template <typename T>
+struct has_trivial_constructor : detail::has_trivial_constructor_impl<T>
+{
+};
+
+template <typename T>
+struct has_trivial_destructor : detail::has_trivial_destructor_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivial : detail::is_trivial_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_copyable : detail::is_trivially_copyable_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_constructible : detail::is_trivially_constructible_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_assignable : detail::is_trivially_assignable_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_copy_assignable : detail::is_trivially_copy_assignable_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_copy_constructible : detail::is_trivially_copy_constructible_impl<T>
+{
+};
+
+template <typename T>
+struct is_trivially_default_constructible : detail::is_trivially_default_constructible_impl<T>
 {
 };
 

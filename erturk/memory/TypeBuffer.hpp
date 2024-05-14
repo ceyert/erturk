@@ -1,0 +1,4 @@
+#ifndef ERTURK_TYPE_BUFFER_H
+#define ERTURK_TYPE_BUFFER_H
+
+#endif  // ERTURK_TYPE_BUFFER_H
