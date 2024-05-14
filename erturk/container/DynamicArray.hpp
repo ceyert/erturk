@@ -16,12 +16,12 @@ class DynamicArray final
 
 private:
     static constexpr size_t DEFAULT_CAP_ = 2;
-    static constexpr unsigned char DEFAULT_MUL_SIZE_ = 2;
+    static constexpr unsigned char DEFAULT_MUL_ = 2;
 
 public:
     explicit DynamicArray() : capacity_{DEFAULT_CAP_}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)} {}
 
-    explicit DynamicArray(size_t cap, const T& value)
+    explicit DynamicArray(const T& value, size_t cap = DEFAULT_CAP_)
         : capacity_{cap}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)}
     {
         erturk::type_buffer_memory::emplace_type_buffers(ptrToBuffer_, capacity_, value);
@@ -79,7 +79,7 @@ public:
     {
         if (size_ >= capacity_)
         {
-            reserve(capacity_ * DEFAULT_MUL_SIZE_);
+            reserve(capacity_ * DEFAULT_MUL_);
         }
         Allocator::construct(ptrToBuffer_ + size_++, value);
     }
@@ -88,7 +88,7 @@ public:
     {
         if (size_ >= capacity_)
         {
-            reserve(capacity_ * DEFAULT_MUL_SIZE_);
+            reserve(capacity_ * DEFAULT_MUL_);
         }
         Allocator::construct(ptrToBuffer_ + size_++, std::move(value));
     }
@@ -98,7 +98,7 @@ public:
     {
         if (size_ >= capacity_)
         {
-            reserve(capacity_ * DEFAULT_MUL_SIZE_);
+            reserve(capacity_ * DEFAULT_MUL_);
         }
         Allocator::construct(ptrToBuffer_ + size_++, std::forward<Args>(args)...);
     }
@@ -232,7 +232,7 @@ public:
 
         if (size_ >= capacity_)
         {
-            size_t new_capacity = capacity_ * DEFAULT_MUL_SIZE_;
+            size_t new_capacity = capacity_ * DEFAULT_MUL_;
             T* new_buffer = Allocator::allocate(new_capacity);
 
             // Emplace from base address to base address + insert_index into new buffer
