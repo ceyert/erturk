@@ -10,57 +10,98 @@ namespace erturk::container
 template <typename T, const size_t SIZE>
 class Array final
 {
-    static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
-                  "T must be copy constructible or move constructible!");
+    static_assert((erturk::meta::is_default_constructible<T>::value
+                   || erturk::meta::is_trivially_constructible<T>::value
+                   || erturk::meta::is_trivially_default_constructible<T>::value),
+                  "T must be default constructible!");
 
 public:
     constexpr Array()
     {
-        static_assert(erturk::meta::is_trivially_default_constructible<T>::value, "T must be default constructible!");
-
-        for (size_t i = 0; i < SIZE; i++)
+        for (size_t idx = 0; idx < SIZE; idx++)
         {
-            buffer_[i] = T{};
+            buffer_[idx] = T{};
         }
     }
 
     template <typename... Args>
-    constexpr explicit Array(const Args&... args) : buffer_{T{args}...}
+    constexpr explicit Array(Args&&... args)
     {
-        static_assert(sizeof...(Args) == SIZE, "Arguments does not match array size!");
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        for (size_t idx = 0; idx < SIZE; idx++)
+        {
+            buffer_[idx] = T{std::forward<Args>(args)...};
+        }
+    }
+
+    Array(const std::initializer_list<T>& range) noexcept(false)
+    {
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        if (range.size() != SIZE)
+        {
+            throw;
+        }
+
+        const T* iter = range.begin();
+        for (size_t idx = 0; idx < SIZE; idx++)
+        {
+            buffer_[idx] = T{*(iter + idx)};
+        }
+    }
+
+    template <typename... Range>
+    constexpr Array(const Range&... range) : buffer_{T{range}...}
+    {
+        static_assert(sizeof...(Range) == SIZE, "Arguments does not match array size!");
     }
 
     constexpr explicit Array(const T& val)
     {
-        for (size_t i = 0; i < SIZE; i++)
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        for (size_t idx = 0; idx < SIZE; idx++)
         {
-            buffer_[i] = val;
+            buffer_[idx] = val;
         }
     }
 
     constexpr Array(const Array& other)
     {
-        for (size_t i = 0; i < SIZE; i++)
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        for (size_t idx = 0; idx < SIZE; idx++)
         {
-            buffer_[i] = other.buffer_[i];
+            buffer_[idx] = other.buffer_[idx];
         }
     }
 
     constexpr Array(Array&& other) noexcept
     {
-        for (size_t i = 0; i < SIZE; i++)
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
+        for (size_t idx = 0; idx < SIZE; idx++)
         {
-            buffer_[i] = std::move(other.buffer_[i]);
+            buffer_[idx] = std::move(other.buffer_[idx]);
         }
     }
 
     constexpr Array& operator=(const Array& other)
     {
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
         if (this != &other)
         {
-            for (size_t i = 0; i < SIZE; ++i)
+            for (size_t idx = 0; idx < SIZE; idx++)
             {
-                buffer_[i] = other.buffer_[i];
+                buffer_[idx] = other.buffer_[idx];
             }
         }
         return *this;
@@ -68,25 +109,36 @@ public:
 
     constexpr Array& operator=(Array&& other) noexcept
     {
+        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
+                      "T must be copy constructible or move constructible!");
+
         if (this != &other)
         {
-            for (size_t i = 0; i < SIZE; i++)
+            for (size_t idx = 0; idx < SIZE; idx++)
             {
-                buffer_[i] = std::move(other.buffer_[i]);
+                buffer_[idx] = std::move(other.buffer_[idx]);
             }
         }
         return *this;
     }
 
-    void fill(const T& value)
+    ~Array()
     {
-        for (size_t i = 0; i < SIZE; i++)
+        for (size_t idx = 0; idx < SIZE; idx++)
         {
-            buffer_[i] = value;
+            buffer_[idx].~T();
         }
     }
 
-    void fill(const T& value, T* start, T* end)
+    void fill(const T& value)
+    {
+        for (size_t idx = 0; idx < SIZE; idx++)
+        {
+            buffer_[idx] = value;
+        }
+    }
+
+    void fill(const T& value, T* start, const T* end)
     {
         if (start < buffer_ || end > buffer_ + SIZE)
         {
@@ -95,7 +147,8 @@ public:
 
         while (start != end)
         {
-            *start++ = value;
+            *start = value;
+            start++;
         }
     }
 
@@ -104,7 +157,7 @@ public:
         fill(value);
     }
 
-    [[nodiscard]] T& at(size_t pos) noexcept(false)
+    [[nodiscard]] T& at(const size_t pos) noexcept(false)
     {
         if (pos >= SIZE)
         {
@@ -113,7 +166,7 @@ public:
         return buffer_[pos];
     }
 
-    [[nodiscard]] const T& at(size_t pos) const noexcept(false)
+    [[nodiscard]] const T& at(const size_t pos) const noexcept(false)
     {
         if (pos >= SIZE)
         {
@@ -122,12 +175,12 @@ public:
         return buffer_[pos];
     }
 
-    [[nodiscard]] T& operator[](size_t pos)
+    [[nodiscard]] T& operator[](const size_t pos)
     {
         return buffer_[pos];
     }
 
-    [[nodiscard]] const T& operator[](size_t pos) const
+    [[nodiscard]] const T& operator[](const size_t pos) const
     {
         return buffer_[pos];
     }
@@ -169,7 +222,7 @@ public:
     class Iterator
     {
     public:
-        explicit Iterator(T* ptr) : t_ptr_(ptr) {}
+        explicit Iterator(T* ptr) : t_ptr_{ptr} {}
 
         Iterator& operator++()
         {
@@ -200,7 +253,7 @@ public:
         }
 
     private:
-        T* t_ptr_;
+        T* t_ptr_{nullptr};
     };
 
     [[nodiscard]] Iterator begin()

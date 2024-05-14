@@ -6,7 +6,10 @@ struct Point
 {
     int x, y;
 
-    explicit Point() : x(0), y(0) {}
+    explicit Point()
+    {
+        std::cout << "Point constructor" << "\n";
+    };
 
     explicit Point(int px, int py) : x(px), y(py) {}
 };
@@ -18,6 +21,15 @@ std::ostream& operator<<(std::ostream& os, const Point& point)
 
 void array_examples()
 {
+    {
+        erturk::container::Array<Point, 5> array1{5, 600};
+        for (const Point& element : array1)
+        {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+    }
+
     erturk::container::Array<int, 5> array1{1, 2, 3, 4, 5};
 
     try
@@ -56,8 +68,7 @@ void array_examples()
     std::cout << std::endl;
 
     {
-        erturk::container::Array<Point, 3> points =
-            erturk::container::Array<Point, 3>{Point(1, 2), Point(3, 4), Point(5, 6)};
+        erturk::container::Array<Point, 3> points = {Point(1, 2), Point(3, 4), Point(5, 6)};
 
         for (int i = 0; i < points.size(); ++i)
         {

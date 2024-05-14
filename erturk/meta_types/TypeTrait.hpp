@@ -426,6 +426,12 @@ template <typename T>
 struct is_trivially_constructible_impl : std::integral_constant<bool, __is_trivially_constructible(T)>
 {
 };
+
+template <typename T>
+struct is_default_constructible_impl : std::integral_constant<bool, __is_constructible(T)>
+{
+};
+
 template <typename T>
 struct is_copy_constructible_impl : integral_constant_impl<bool, __is_constructible(T, const T&)>
 {
@@ -638,27 +644,34 @@ struct has_trivial_copy : detail::has_trivial_copy_impl<T>
 };
 
 template <typename T>
+struct is_trivial : detail::is_trivial_impl<T>
+{
+};
+
+// ******* Constructions *******
+template <typename T>
 struct has_trivial_constructor : detail::has_trivial_constructor_impl<T>
 {
 };
 
 template <typename T>
-struct has_trivial_destructor : detail::has_trivial_destructor_impl<T>
+struct is_trivially_constructible : detail::is_trivially_constructible_impl<T>
 {
 };
 
 template <typename T>
-struct is_trivial : detail::is_trivial_impl<T>
+struct is_trivially_default_constructible : detail::is_trivially_default_constructible_impl<T>
 {
 };
+
+template <typename T>
+struct is_default_constructible : detail::is_default_constructible_impl<T>
+{
+};
+// ******* Constructions *******
 
 template <typename T>
 struct is_trivially_copyable : detail::is_trivially_copyable_impl<T>
-{
-};
-
-template <typename T>
-struct is_trivially_constructible : detail::is_trivially_constructible_impl<T>
 {
 };
 
@@ -678,7 +691,7 @@ struct is_trivially_copy_constructible : detail::is_trivially_copy_constructible
 };
 
 template <typename T>
-struct is_trivially_default_constructible : detail::is_trivially_default_constructible_impl<T>
+struct has_trivial_destructor : detail::has_trivial_destructor_impl<T>
 {
 };
 
