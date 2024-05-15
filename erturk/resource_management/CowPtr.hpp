@@ -14,6 +14,12 @@ class CowPtr final
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
+    static_assert(erturk::meta::is_same<decltype(std::declval<Allocator>()()), T*>::value,
+                  "Allocator return type must be T*");
+
+    static_assert(erturk::meta::is_same<decltype(std::declval<Deleter>()(std::declval<T*>())), void>::value,
+                  "Deleter parameter must be T* and return void");
+
 public:
     explicit CowPtr(T* resource_ptr, const Allocator& alloc, const Deleter& deleter)
         : resource_control_ptr_{new ResourceControl_{resource_ptr, deleter}}, allocator_{alloc}
