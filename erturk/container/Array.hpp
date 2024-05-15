@@ -70,9 +70,6 @@ public:
 
     constexpr Array& operator=(const Array& other)
     {
-        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
-                      "T must be copy constructible or move constructible!");
-
         if (this != &other)
         {
             for (size_t idx = 0; idx < SIZE; idx++)
@@ -85,9 +82,6 @@ public:
 
     constexpr Array& operator=(Array&& other) noexcept
     {
-        static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
-                      "T must be copy constructible or move constructible!");
-
         if (this != &other)
         {
             for (size_t idx = 0; idx < SIZE; idx++)
