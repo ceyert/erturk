@@ -8,23 +8,26 @@
 
 namespace erturk::resource_management
 {
-template <class T, const std::function<T*()> allocator, const std::function<void(T*)> deleter>
+template <class T, class Allocator, class Deleter>
 class CowPtr final
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
 public:
-    explicit CowPtr(const T* resource_ptr) : resource_control_ptr_{new ResourceControl_{resource_ptr}} {}
+    explicit CowPtr(T* resource_ptr, const Allocator& alloc, const Deleter& deleter)
+        : resource_control_ptr_{new ResourceControl_{resource_ptr, deleter}}, allocator_{alloc}
+    {
+    }
 
     // Apply pointer shallow copy and increase reference count
-    CowPtr(const CowPtr& other) : resource_control_ptr_{other.resource_control_ptr_}
+    CowPtr(const CowPtr& other) : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
     {
         resource_control_ptr_->reference_count_.fetch_add(1, std::memory_order_relaxed);
     }
 
     // Transfer control ownership
-    CowPtr(CowPtr&& other) noexcept : resource_control_ptr_{other.resource_control_ptr_}
+    CowPtr(CowPtr&& other) noexcept : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
     {
         other.resource_control_ptr_ = nullptr;
     }
@@ -37,6 +40,7 @@ public:
             release_resource_if();
             resource_control_ptr_ = other.resource_control_ptr_;
             resource_control_ptr_->reference_count_.fetch_add(1, std::memory_order_relaxed);
+            allocator_ = other.allocator_;
         }
         return *this;
     }
@@ -48,6 +52,7 @@ public:
         {
             release_resource_if();
             resource_control_ptr_ = other.resource_control_ptr_;
+            allocator_ = other.allocator_;
             other.resource_control_ptr_ = nullptr;
         }
         return *this;
@@ -56,17 +61,6 @@ public:
     ~CowPtr()
     {
         release_resource_if();
-    }
-
-    [[nodiscard]] const T& read() const noexcept
-    {
-        return *resource_control_ptr_->resource_ptr_;
-    }
-
-    [[nodiscard]] T& write() noexcept(false)
-    {
-        detach_resource_if();
-        return *resource_control_ptr_->resource_ptr_;
     }
 
     [[nodiscard]] T* operator->()
@@ -100,6 +94,17 @@ public:
     }
 
 private:
+    [[nodiscard]] const T& read() const noexcept
+    {
+        return *resource_control_ptr_->resource_;
+    }
+
+    [[nodiscard]] T& write() noexcept(false)
+    {
+        detach_resource_if();
+        return *resource_control_ptr_->resource_;
+    }
+
     void detach_resource_if() noexcept(false)
     {
         if (resource_control_ptr_->reference_count_.load(std::memory_order_acquire) > 1)
@@ -109,7 +114,7 @@ private:
             // decrease old reference count
             old_resource_control->reference_count_.fetch_sub(1, std::memory_order_acq_rel);
 
-            T* new_resource_ptr = allocator.operator()();
+            T* new_resource_ptr = allocator_.operator()();
 
             if (new_resource_ptr == nullptr)
             {
@@ -121,15 +126,15 @@ private:
             // T has responsibility to handle deep copy
             if constexpr (erturk::meta::is_copy_constructible<T>::value)
             {
-                new_resource_ptr->operator=(*old_resource_control->resource_ptr_);
+                new_resource_ptr->operator=(*old_resource_control->resource_);
             }
             else
             {
-                new_resource_ptr->operator=(std::move(*old_resource_control->resource_ptr_));
+                new_resource_ptr->operator=(std::move(*old_resource_control->resource_));
             }
 
             // Allocate new resource control
-            resource_control_ptr_ = new ResourceControl_{new_resource_ptr};
+            resource_control_ptr_ = new ResourceControl_{new_resource_ptr, old_resource_control->deleter_};
         }
     }
 
@@ -147,38 +152,43 @@ private:
 
     struct ResourceControl_ final
     {
-        explicit ResourceControl_(const T* resource) : resource_{resource}, reference_count_{1} {}
+        explicit ResourceControl_(T* resource, Deleter deleter)
+            : resource_{resource}, reference_count_{1}, deleter_{deleter}
+        {
+        }
 
         ~ResourceControl_()
         {
             if (reference_count_.load(std::memory_order_acquire) == 0 && resource_ != nullptr)
             {
-                deleter.operator()(resource_);
+                deleter_.operator()(resource_);
             }
         }
 
-        const T* resource_{nullptr};
+        T* resource_{nullptr};
         std::atomic<size_t> reference_count_{0};
+        Deleter deleter_{};
     };
 
     ResourceControl_* resource_control_ptr_{nullptr};
+    Allocator allocator_{};
 };
 
-inline auto allocator = []<typename T, typename... Args>(Args&&... args) -> T* {
-    return new T{std::forward<Args>(args)...};
-};
-
-inline auto deleter = []<typename T>(T* address) -> void {
-    delete address;
-};
-
-template <class T, auto alloc = allocator, auto del = deleter, class... Args>
-inline CowPtr<T, alloc, del>&& make_cow_ptr(Args&&... args) noexcept(false)
+template <class T, class... Args>
+inline CowPtr<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args&&... args) noexcept(false)
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
-    return CowPtr<T, alloc, del>{new T{std::forward<Args>(args)...}};
+    auto default_allocator = [... arguments = std::forward<Args>(args)]() -> T* {
+        return new T{arguments...};
+    };
+
+    auto default_deleter = [](T* address) -> void {
+        delete address;
+    };
+    return CowPtr<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
+                                                                   default_allocator, default_deleter};
 }
 
 }  // namespace erturk::resource_management
