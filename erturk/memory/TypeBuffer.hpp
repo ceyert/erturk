@@ -224,11 +224,6 @@ public:
 private:
     using unqualified_pointer = typename std::remove_cv<T>::type*;
 
-    mutable unsigned char type_buffer_[(sizeof(T) + alignof(T) - 1) / alignof(T) * alignof(T)];
-    mutable bool is_initialized_;
-    std::function<void()> construct_functor_;
-    std::function<void(T&)> destruct_functor_;
-
     // "val" will call destructor on end of scope by default
     static constexpr void default_destructor(T& val) noexcept {}
 
@@ -307,6 +302,12 @@ private:
     {
         (*type_buffer_address()) = std::forward<T>(rhs);
     }
+
+private:
+    mutable unsigned char type_buffer_[(sizeof(T) + alignof(T) - 1) / alignof(T) * alignof(T)];
+    mutable bool is_initialized_;
+    std::function<void()> construct_functor_;
+    std::function<void(T&)> destruct_functor_;
 };
 
 }  // namespace erturk::memory
