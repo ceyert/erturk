@@ -1,4 +1,3 @@
-
 #include "../../erturk/container/Array.hpp"
 #include "../../erturk/container/DynamicArray.hpp"
 #include <iostream>
