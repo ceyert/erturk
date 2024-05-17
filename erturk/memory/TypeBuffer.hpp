@@ -243,7 +243,10 @@ private:
         }
     }
 
+    // Default constructor
     // User-defined constructor
+    // Copy Constructor
+    // move constructor
     template <typename... Args>
     void construct(Args&&... args) const
     {
@@ -253,30 +256,6 @@ private:
         destruct();
 
         new (type_buffer_address()) T{std::forward<Args>(args)...};  // in-place instantiation
-        is_initialized_ = true;
-    }
-
-    // Default constructor
-    void construct() const
-    {
-        destruct();
-        new (type_buffer_address()) T{};  // in-place instantiation
-        is_initialized_ = true;
-    }
-
-    // Copy constructor
-    void construct(const T& other_t) const
-    {
-        destruct();
-        new (type_buffer_address()) T{other_t};  // in-place instantiation
-        is_initialized_ = true;
-    }
-
-    // Move constructor
-    void construct(T&& other_t) const
-    {
-        destruct();
-        new (type_buffer_address()) T{std::forward<T>(other_t)};  // in-place instantiation
         is_initialized_ = true;
     }
 
@@ -304,7 +283,7 @@ private:
     }
 
 private:
-    mutable unsigned char type_buffer_[(sizeof(T) + alignof(T) - 1) / alignof(T) * alignof(T)];
+    mutable unsigned char type_buffer_[((sizeof(T) + alignof(T) - 1) / alignof(T)) * alignof(T)];
     mutable bool is_initialized_;
     std::function<void()> construct_functor_;
     std::function<void(T&)> destruct_functor_;
