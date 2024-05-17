@@ -94,6 +94,11 @@ public:
         return resource_control_ptr_->reference_count_.load(std::memory_order_acquire) == 1;
     }
 
+    [[nodiscard]] size_t reference_count() const noexcept
+    {
+        return resource_control_ptr_->reference_count_.load(std::memory_order_acquire);
+    }
+
     void detach() const
     {
         detach_resource_if();
@@ -186,18 +191,18 @@ inline CowPtr<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
-    auto default_allocator = [... arguments = std::forward<Args>(args)]() -> T* {
+    std::function<T*(void)> defaultAllocator = [... arguments = std::forward<Args>(args)]() -> T* {
         return new T{arguments...};
     };
 
-    auto default_deleter = [](T* address) -> void {
+    std::function<void(T*)> defaultDeleter = [](T* address) -> void {
         if (address != nullptr)
         {
             delete address;
         }
     };
-    return CowPtr<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
-                                                                   default_allocator, default_deleter};
+    return CowPtr<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...}, defaultAllocator,
+                                                                   defaultDeleter};
 }
 
 }  // namespace erturk::resource_management
