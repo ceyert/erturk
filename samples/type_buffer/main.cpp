@@ -54,18 +54,17 @@ int main()
     {
         erturk::memory::TypeBuffer<Person> personBuffer{};
         personBuffer.emplace("Alice", 30);
-        personBuffer->display();
+        personBuffer.operator->()->display();
     }
 
     {
         erturk::memory::TypeBuffer<LogManager> logger;
-        logger.emplace("app.log");  // Initialize logger
-        logger->log("Application started!");
+        logger.emplace("app.log");
+        logger.operator->()->log("Application started!");
 
-        // Resetting the logger with a new file
         logger.reset();
         logger.emplace("new_app.log");
-        logger->log("Logging to a new file");
+        logger.operator->()->log("Logging to a new file");
     }
 
     {
