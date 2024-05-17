@@ -4,6 +4,8 @@
 #include "../allocator/AlignedSystemAllocator.hpp"
 #include "../memory/TypeBufferMemory.hpp"
 #include "../meta_types/TypeTrait.hpp"
+#include "TypeBufferArray.hpp"
+#include <stdexcept>
 
 namespace erturk::container
 {
@@ -19,17 +21,33 @@ private:
     static constexpr unsigned char DEFAULT_MUL_ = 2;
 
 public:
-    explicit DynamicArray() : capacity_{DEFAULT_CAP_}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)} {}
+    explicit DynamicArray() noexcept(false)
+        : capacity_{DEFAULT_CAP_}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)}
+    {
+        if (ptrToBuffer_ == nullptr)
+        {
+            throw std::runtime_error("Failed to allocate memory!");
+        }
+    }
 
-    explicit DynamicArray(const T& value, size_t cap = DEFAULT_CAP_)
+    explicit DynamicArray(const T& value, size_t cap = DEFAULT_CAP_) noexcept(false)
         : capacity_{cap}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)}
     {
+        if (ptrToBuffer_ == nullptr)
+        {
+            throw std::runtime_error("Failed to allocate memory!");
+        }
+
         erturk::type_buffer_memory::emplace_type_buffers(ptrToBuffer_, capacity_, value);
     }
 
-    DynamicArray(const DynamicArray& other)
+    DynamicArray(const DynamicArray& other) noexcept(false)
         : capacity_(other.capacity_), size_(other.size_), ptrToBuffer_(Allocator::allocate(capacity_))
     {
+        if (ptrToBuffer_ == nullptr)
+        {
+            throw std::runtime_error("Failed to allocate memory!");
+        }
         erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(other.ptrToBuffer_,
                                                                      other.ptrToBuffer_ + other.size_, ptrToBuffer_);
     }
@@ -48,7 +66,7 @@ public:
         Allocator::deallocate(ptrToBuffer_);
     }
 
-    DynamicArray& operator=(const DynamicArray& other)
+    DynamicArray& operator=(const DynamicArray& other) noexcept(false)
     {
         if (this != &other)
         {
@@ -57,6 +75,12 @@ public:
 
             // apply deep element copy
             ptrToBuffer_ = Allocator::allocate(capacity_);
+
+            if (ptrToBuffer_ == nullptr)
+            {
+                throw std::runtime_error("Failed to allocate memory!");
+            }
+
             erturk::type_buffer_memory::emplace_type_buffers_copy(other.ptrToBuffer_, other.ptrToBuffer_ + other.size_,
                                                                   ptrToBuffer_);
         }
@@ -103,22 +127,26 @@ public:
         Allocator::construct(ptrToBuffer_ + size_++, std::forward<Args>(args)...);
     }
 
-    void reserve(size_t new_capacity)
+    void reserve(size_t new_capacity) noexcept(false)
     {
         if (new_capacity > capacity_)
         {
             T* new_buffer = Allocator::allocate(new_capacity);
-            if (ptrToBuffer_ != nullptr)
-            {
-                erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(ptrToBuffer_, ptrToBuffer_ + size_,
-                                                                             new_buffer);
 
-                for (size_t idx = 0; idx < size_; idx++)
-                {
-                    Allocator::destroy(ptrToBuffer_ + idx);
-                }
-                Allocator::deallocate(ptrToBuffer_);
+            if (ptrToBuffer_ == nullptr)
+            {
+                throw std::runtime_error("Failed to allocate memory!");
             }
+
+            erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(ptrToBuffer_, ptrToBuffer_ + size_,
+                                                                         new_buffer);
+
+            for (size_t idx = 0; idx < size_; idx++)
+            {
+                Allocator::destroy(ptrToBuffer_ + idx);
+            }
+            Allocator::deallocate(ptrToBuffer_);
+
             ptrToBuffer_ = new_buffer;
             capacity_ = new_capacity;
         }
@@ -221,7 +249,7 @@ public:
         return Iterator{ptrToBuffer_ + size_};
     }
 
-    Iterator insert(const Iterator iterator, const T& value)
+    Iterator insert(const Iterator iterator, const T& value) noexcept(false)
     {
         if (iterator.get() < ptrToBuffer_ || iterator.get() > ptrToBuffer_ + size_)
         {
@@ -234,6 +262,11 @@ public:
         {
             size_t new_capacity = capacity_ * DEFAULT_MUL_;
             T* new_buffer = Allocator::allocate(new_capacity);
+
+            if (new_buffer == nullptr)
+            {
+                throw std::runtime_error("Failed to allocate memory!");
+            }
 
             // Emplace from base address to base address + insert_index into new buffer
             erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(ptrToBuffer_, ptrToBuffer_ + insert_index,

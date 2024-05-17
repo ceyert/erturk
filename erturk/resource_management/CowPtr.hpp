@@ -125,7 +125,7 @@ private:
             if (new_resource_ptr == nullptr)
             {
                 release_resource_if();
-                throw;
+                throw std::runtime_error("Failed to allocate memory!");
             }
 
             // Call assign operator to apply deep copy
@@ -191,7 +191,10 @@ inline CowPtr<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args
     };
 
     auto default_deleter = [](T* address) -> void {
-        delete address;
+        if (address != nullptr)
+        {
+            delete address;
+        }
     };
     return CowPtr<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
                                                                    default_allocator, default_deleter};
