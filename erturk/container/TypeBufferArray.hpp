@@ -167,7 +167,7 @@ public:
     class Iterator
     {
     public:
-        explicit Iterator(T* ptr) : type_buffer_ptr_{ptr} {}
+        explicit Iterator(erturk::memory::TypeBuffer<T>* ptr) : type_buffer_ptr_{ptr} {}
 
         Iterator& operator++()
         {
