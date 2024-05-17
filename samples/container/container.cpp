@@ -1,5 +1,6 @@
 #include "../../erturk/container/Array.hpp"
 #include "../../erturk/container/DynamicArray.hpp"
+#include "../../erturk/container/TypeBufferArray.hpp"
 #include <iostream>
 
 struct Point
@@ -17,6 +18,48 @@ struct Point
 std::ostream& operator<<(std::ostream& os, const Point& point)
 {
     return os << "(" << point.x << ", " << point.y << ")";
+}
+
+void type_buffer_array_examples()
+{
+    {
+        erturk::container::TypeBufferArray<int, 5> array{1, 2, 3, 4, 5};
+
+        for (int idx = 0; idx < array.size(); idx++)
+        {
+            std::cout << "Element at index " << idx << ": " << array.at(idx) << std::endl;
+        }
+    }
+
+    {
+        erturk::container::TypeBufferArray<Point, 3> array{Point{1, 2}, Point{3, 4}, Point{5, 6}};
+
+        for (int idx = 0; idx < array.size(); idx++)
+        {
+            std::cout << "Element at index " << idx << ": " << array.at(idx) << std::endl;
+        }
+    }
+
+    {
+        erturk::container::TypeBufferArray<int, 5> array{};
+        array.emplace(2, 100);
+        std::cout << "Element at index 2: " << array.at(2) << std::endl;
+    }
+
+    {
+        erturk::container::TypeBufferArray<Point, 3> pointArray{};
+        pointArray.emplaceAll(Point{5, 5});
+    }
+
+    {
+        erturk::container::TypeBufferArray<Point, 9> bufferArray{};
+
+        for (int idx = 0; idx < bufferArray.size(); idx++)
+        {
+            bufferArray.emplace(idx, Point{idx - 1, idx + 1});
+            std::cout << "Element at index " << idx << ": " << bufferArray.at(idx) << std::endl;
+        }
+    }
 }
 
 void array_examples()
@@ -176,6 +219,7 @@ void dynamic_array_examples()
 
 int main()
 {
+    type_buffer_array_examples();
     array_examples();
     dynamic_array_examples();
     return 0;

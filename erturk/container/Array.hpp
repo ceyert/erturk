@@ -129,20 +129,6 @@ public:
         }
     }
 
-    void fill(const T& value, T* start, const T* end)
-    {
-        if (start < buffer_ || end > buffer_ + SIZE)
-        {
-            throw std::out_of_range("Fill range out of buffer bounds");
-        }
-
-        while (start != end)
-        {
-            *start = value;
-            start++;
-        }
-    }
-
     void assign(const T& value)
     {
         fill(value);
@@ -243,6 +229,11 @@ public:
             return *t_ptr_;
         }
 
+        T* operator->()
+        {
+            return t_ptr_;
+        }
+
     private:
         T* t_ptr_{nullptr};
     };
@@ -265,6 +256,20 @@ public:
     [[nodiscard]] Iterator end() const
     {
         return Iterator{buffer_ + SIZE};
+    }
+
+    void fill(const T& value, Iterator start, const Iterator end)
+    {
+        if (start.operator->() < buffer_ || end.operator->() > buffer_ + SIZE)
+        {
+            throw std::out_of_range("Fill range out of buffer bounds");
+        }
+
+        while (start != end)
+        {
+            start.operator*() = value;
+            start.operator++();
+        }
     }
 };
 }  // namespace erturk::container
