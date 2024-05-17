@@ -1,4 +1,4 @@
-#include "../../erturk/resource_management/CowPtr.hpp"
+#include "../../erturk/resource_management/CowPtrManager.hpp"
 #include <iostream>
 #include <string>
 #include <utility>

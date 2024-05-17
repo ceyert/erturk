@@ -4,4 +4,4 @@ add_library(resource_management INTERFACE)
 
 target_include_directories(
         resource_management INTERFACE
-        ${CMAKE_SOURCE_DIR}/erturk/resource_management/CowPtr.hpp)
+        ${CMAKE_SOURCE_DIR}/erturk/resource_management/CowPtrManager.hpp)

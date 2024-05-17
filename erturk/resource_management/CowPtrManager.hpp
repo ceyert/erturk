@@ -9,7 +9,7 @@
 namespace erturk::resource_management
 {
 template <class T, class Allocator, class Deleter>
-class CowPtr final
+class CowPtrManager final
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
@@ -21,25 +21,27 @@ class CowPtr final
                   "Deleter parameter must be T* and return void");
 
 public:
-    explicit CowPtr(T* resource_ptr, const Allocator& alloc, const Deleter& deleter)
+    explicit CowPtrManager(T* resource_ptr, const Allocator& alloc, const Deleter& deleter)
         : resource_control_ptr_{new ResourceControl_{resource_ptr, deleter}}, allocator_{alloc}
     {
     }
 
     // Apply pointer shallow copy and increase reference count
-    CowPtr(const CowPtr& other) : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
+    CowPtrManager(const CowPtrManager& other)
+        : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
     {
         resource_control_ptr_->reference_count_.fetch_add(1, std::memory_order_relaxed);
     }
 
     // Transfer control ownership
-    CowPtr(CowPtr&& other) noexcept : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
+    CowPtrManager(CowPtrManager&& other) noexcept
+        : resource_control_ptr_{other.resource_control_ptr_}, allocator_{other.allocator_}
     {
         other.resource_control_ptr_ = nullptr;
     }
 
     // Apply pointer shallow copy and increase reference count
-    CowPtr& operator=(const CowPtr& other)
+    CowPtrManager& operator=(const CowPtrManager& other)
     {
         if (this != &other)
         {
@@ -52,7 +54,7 @@ public:
     }
 
     // Transfer control ownership
-    CowPtr& operator=(CowPtr&& other) noexcept
+    CowPtrManager& operator=(CowPtrManager&& other) noexcept
     {
         if (this != &other)
         {
@@ -64,7 +66,7 @@ public:
         return *this;
     }
 
-    ~CowPtr()
+    ~CowPtrManager()
     {
         release_resource_if();
     }
@@ -186,7 +188,7 @@ private:
 };
 
 template <class T, class... Args>
-inline CowPtr<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args&&... args) noexcept(false)
+inline CowPtrManager<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args&&... args) noexcept(false)
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
@@ -201,8 +203,8 @@ inline CowPtr<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args
             delete address;
         }
     };
-    return CowPtr<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...}, defaultAllocator,
-                                                                   defaultDeleter};
+    return CowPtrManager<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
+                                                                          defaultAllocator, defaultDeleter};
 }
 
 }  // namespace erturk::resource_management
