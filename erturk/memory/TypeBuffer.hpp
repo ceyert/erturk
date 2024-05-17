@@ -246,7 +246,7 @@ private:
     // Default constructor
     // User-defined constructor
     // Copy Constructor
-    // move constructor
+    // Move constructor
     template <typename... Args>
     void construct(Args&&... args) const
     {
