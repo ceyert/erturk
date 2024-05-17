@@ -30,7 +30,7 @@ public:
     explicit constexpr TypeBuffer(Args&&... args)
         : type_buffer_{},
           is_initialized_{false},
-          construct_functor_{[this, &args...]() {  // capture by value, arguments may not copy-move constructible
+          construct_functor_{[this, &args...]() {  // capture by reference, arguments may not copy-move constructible
               this->construct(std::forward<Args>(args)...);
           }},
           destruct_functor_{default_destructor}
@@ -72,7 +72,7 @@ public:
     explicit TypeBuffer(const T& other)
         : type_buffer_{},
           is_initialized_{false},
-          construct_functor_{[this, &other]() {  // capture by value, arguments may not copy-move constructible
+          construct_functor_{[this, &other]() {  // capture by reference, arguments may not copy-move constructible
               this->construct(std::move(other));
           }},
           destruct_functor_(default_destructor)
@@ -83,7 +83,7 @@ public:
     explicit TypeBuffer(T&& other)
         : type_buffer_{},
           is_initialized_{false},
-          construct_functor_{[this, &other]() {  // capture by value, arguments may not copy-move constructible
+          construct_functor_{[this, &other]() {  // capture by reference, arguments may not copy-move constructible
               this->construct(std::move(other));
           }},
           destruct_functor_{default_destructor}
@@ -139,10 +139,11 @@ public:
     template <typename... Args>
     void emplace(Args&&... args)
     {
-        static_assert(std::is_constructible<T, Args...>::value,
+        static_assert(std::is_constructible<T, Args...>::value || erturk::meta::is_copy_constructible<T>::value
+                          || erturk::meta::is_move_constructible<T>::value,
                       "No matching constructor for type T with given arguments");
 
-        // capture by value, arguments may not copy-move constructible
+        // capture by reference, arguments may not copy-move constructible
         construct_functor_ = [this, &args...]() {
             this->construct(std::forward<Args>(args)...);
         };
@@ -224,7 +225,7 @@ public:
 private:
     using unqualified_pointer = typename std::remove_cv<T>::type*;
 
-    // "val" will call destructor on end of scope by default
+    // "val" call destructor on end of scope by default
     static constexpr void default_destructor(T& val) noexcept {}
 
     // address-of idiom (https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/Address_Of)
@@ -250,7 +251,8 @@ private:
     template <typename... Args>
     void construct(Args&&... args) const
     {
-        static_assert(std::is_constructible<T, Args...>::value,
+        static_assert(std::is_constructible<T, Args...>::value || erturk::meta::is_copy_constructible<T>::value
+                          || erturk::meta::is_move_constructible<T>::value,
                       "No matching constructor for type T with given arguments");
 
         destruct();
