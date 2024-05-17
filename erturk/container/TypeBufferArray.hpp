@@ -76,11 +76,26 @@ public:
     }
 
     template <typename... Args>
+    constexpr void emplace_lazy(size_t pos, Args&&... args)
+    {
+        type_buffer_array_[pos].emplace_lazy(std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     constexpr void emplaceAll(Args&&... args)
     {
         for (size_t idx = 0; idx < SIZE; idx++)
         {
             type_buffer_array_[idx].emplace(std::forward<Args>(args)...);
+        }
+    }
+
+    template <typename... Args>
+    constexpr void emplace_all_lazy(Args&&... args)
+    {
+        for (size_t idx = 0; idx < SIZE; idx++)
+        {
+            type_buffer_array_[idx].emplace_lazy(std::forward<Args>(args)...);
         }
     }
 
@@ -158,6 +173,16 @@ public:
     [[nodiscard]] size_t size() const
     {
         return SIZE;
+    }
+
+    [[nodiscard]] const erturk::memory::TypeBuffer<T>* operator->() const noexcept
+    {
+        return type_buffer_array_;
+    }
+
+    [[nodiscard]] erturk::memory::TypeBuffer<T>* operator->() noexcept
+    {
+        return type_buffer_array_;
     }
 
 private:

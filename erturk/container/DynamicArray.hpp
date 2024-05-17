@@ -4,12 +4,14 @@
 #include "../allocator/AlignedSystemAllocator.hpp"
 #include "../memory/TypeBufferMemory.hpp"
 #include "../meta_types/TypeTrait.hpp"
-#include "TypeBufferArray.hpp"
 #include <stdexcept>
 
 namespace erturk::container
 {
 
+// For simplicity:
+// - No SSO
+// - No COW
 template <typename T, typename Allocator = erturk::allocator::AlignedSystemAllocator<T, alignof(T)>>
 class DynamicArray final
 {
@@ -30,7 +32,7 @@ public:
         }
     }
 
-    explicit DynamicArray(const T& value, size_t cap = DEFAULT_CAP_) noexcept(false)
+    explicit DynamicArray(const T& value, const size_t cap = DEFAULT_CAP_) noexcept(false)
         : capacity_{cap}, size_{0}, ptrToBuffer_{Allocator::allocate(capacity_)}
     {
         if (ptrToBuffer_ == nullptr)
@@ -38,7 +40,7 @@ public:
             throw std::runtime_error("Failed to allocate memory!");
         }
 
-        erturk::type_buffer_memory::emplace_type_buffers(ptrToBuffer_, capacity_, value);
+        erturk::type_buffer_memory::emplace_type_buffers_n(ptrToBuffer_, capacity_, value);
     }
 
     DynamicArray(const DynamicArray& other) noexcept(false)
@@ -105,7 +107,7 @@ public:
         {
             reserve(capacity_ * DEFAULT_MUL_);
         }
-        Allocator::construct(ptrToBuffer_ + size_++, value);
+        erturk::type_buffer_memory::construct_at(ptrToBuffer_ + size_++, value);
     }
 
     void push_back(T&& value)
@@ -114,7 +116,7 @@ public:
         {
             reserve(capacity_ * DEFAULT_MUL_);
         }
-        Allocator::construct(ptrToBuffer_ + size_++, std::move(value));
+        erturk::type_buffer_memory::construct_at(ptrToBuffer_ + size_++, std::move(value));
     }
 
     template <typename... Args>
@@ -124,7 +126,7 @@ public:
         {
             reserve(capacity_ * DEFAULT_MUL_);
         }
-        Allocator::construct(ptrToBuffer_ + size_++, std::forward<Args>(args)...);
+        erturk::type_buffer_memory::construct_at(ptrToBuffer_ + size_++, std::forward<Args>(args)...);
     }
 
     void reserve(size_t new_capacity) noexcept(false)
@@ -143,7 +145,7 @@ public:
 
             for (size_t idx = 0; idx < size_; idx++)
             {
-                Allocator::destroy(ptrToBuffer_ + idx);
+                erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + idx);
             }
             Allocator::deallocate(ptrToBuffer_);
 
@@ -176,7 +178,7 @@ public:
     {
         for (size_t idx = 0; idx < size_; idx++)
         {
-            Allocator::destroy(ptrToBuffer_ + idx);
+            erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + idx);
         }
         size_ = 0;
     }
@@ -273,7 +275,7 @@ public:
                                                                          new_buffer);
 
             // Emplace insert value
-            Allocator::construct(new_buffer + insert_index, value);
+            erturk::type_buffer_memory::construct_at(new_buffer + insert_index, value);
 
             // Emplace from (base address + insert_index) to (base address + size) into (new_buffer + insert_index + 1)
             erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(
@@ -281,7 +283,7 @@ public:
 
             for (size_t idx = 0; idx < size_; idx++)
             {
-                Allocator::destroy(ptrToBuffer_ + idx);
+                erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + idx);
             }
             Allocator::deallocate(ptrToBuffer_);
 
@@ -295,12 +297,12 @@ public:
             while (idx > insert_index)
             {
                 // Emplace T from (ptrToBuffer_ + idx) - 1 at address (ptrToBuffer_ + idx)
-                Allocator::construct(ptrToBuffer_ + idx, std::move(ptrToBuffer_[idx - 1]));
-                Allocator::destroy(ptrToBuffer_ + idx - 1);
+                erturk::type_buffer_memory::construct_at(ptrToBuffer_ + idx, std::move(ptrToBuffer_[idx - 1]));
+                erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + idx - 1);
                 idx--;
             }
 
-            Allocator::construct(ptrToBuffer_ + insert_index, value);
+            erturk::type_buffer_memory::construct_at(ptrToBuffer_ + insert_index, value);
         }
         size_++;
         return Iterator{ptrToBuffer_ + insert_index};  // return inserted position iterator
@@ -315,12 +317,12 @@ public:
 
         size_t erase_index = iterator.get() - ptrToBuffer_;
 
-        Allocator::destroy(ptrToBuffer_ + erase_index);
+        erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + erase_index);
 
         for (size_t idx = erase_index; idx < size_ - 1; idx++)
         {
-            Allocator::construct(ptrToBuffer_ + idx, std::move(ptrToBuffer_[idx + 1]));
-            Allocator::destroy(ptrToBuffer_ + idx + 1);
+            erturk::type_buffer_memory::construct_at(ptrToBuffer_ + idx, std::move(ptrToBuffer_[idx + 1]));
+            erturk::type_buffer_memory::destruct_at(ptrToBuffer_ + idx + 1);
         }
 
         size_--;

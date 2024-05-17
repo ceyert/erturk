@@ -147,7 +147,21 @@ public:
         construct_functor_ = [this, &args...]() {
             this->construct(std::forward<Args>(args)...);
         };
+
         instantiate();
+    }
+
+    template <typename... Args>
+    void emplace_lazy(Args&&... args)
+    {
+        static_assert(std::is_constructible<T, Args...>::value || erturk::meta::is_copy_constructible<T>::value
+                          || erturk::meta::is_move_constructible<T>::value,
+                      "No matching constructor for type T with given arguments");
+
+        // capture by reference, arguments may not copy-move constructible
+        construct_functor_ = [this, &args...]() {
+            this->construct(std::forward<Args>(args)...);
+        };
     }
 
     T& operator=(const T& tVal)
