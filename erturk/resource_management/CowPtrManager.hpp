@@ -16,6 +16,125 @@ namespace erturk::resource_management
 template <class T, class Allocator, class Deleter>
 class CowPtrManager final
 {
+    class ResourceControl_ final
+    {
+    public:
+        explicit ResourceControl_(T* resource, const Allocator& allocator, const Deleter& deleter)
+            : resource_{resource},
+              resource_freed_{false},
+              reference_count_{1},
+              weak_count_{0},
+              allocator_{allocator},
+              deleter_{deleter},
+              locked_{false}
+        {
+        }
+
+        ResourceControl_(const ResourceControl_& other) = delete;
+
+        ResourceControl_(ResourceControl_&& other) noexcept = delete;
+
+        ResourceControl_& operator=(const ResourceControl_& other) = delete;
+
+        ResourceControl_& operator=(ResourceControl_&& other) noexcept = delete;
+
+        // SAFETY: resource managed by explicit free_resource_if() call
+        ~ResourceControl_() = default;
+
+        void increase_reference_count()
+        {
+            reference_count_.fetch_add(1, std::memory_order_acq_rel);
+        }
+
+        // Decrease reference count, free resource if reference count is 0.
+        void decrease_reference_count()
+        {
+            reference_count_.fetch_sub(1, std::memory_order_acq_rel);
+            free_resource_if();
+        }
+
+        void increase_weak_count()
+        {
+            weak_count_.fetch_add(1, std::memory_order_acq_rel);
+        }
+
+        void decrease_weak_count()
+        {
+            weak_count_.fetch_sub(1, std::memory_order_acq_rel);
+        }
+
+        [[nodiscard]] size_t reference_count() const noexcept
+        {
+            return reference_count_.load(std::memory_order_acquire);
+        }
+
+        [[nodiscard]] size_t weak_count() const noexcept
+        {
+            return weak_count_.load(std::memory_order_acquire);
+        }
+
+        [[nodiscard]] T* get_resource() noexcept(false)
+        {
+            if (is_resource_freed())
+            {
+                throw std::runtime_error("Resource already freed!");
+            }
+            return resource_;
+        }
+
+        [[nodiscard]] bool is_resource_freed() const
+        {
+            return resource_freed_;
+        }
+
+        [[nodiscard]] bool is_locked() const noexcept
+        {
+            return locked_.load(std::memory_order_acquire);
+        }
+
+        void set_lock(bool flag) noexcept
+        {
+            locked_.store(flag, std::memory_order_acq_rel);
+        }
+
+        [[nodiscard]] T* allocate()
+        {
+            return allocator_.operator()();
+        }
+
+        [[nodiscard]] Allocator& get_allocator()
+        {
+            return allocator_;
+        }
+
+        [[nodiscard]] Deleter& get_deleter()
+        {
+            return deleter_;
+        }
+
+    private:
+        void free_resource_if()
+        {
+            if (!is_resource_freed())
+            {
+                if (reference_count_.load(std::memory_order_acquire) == 0 && resource_ != nullptr)
+                {
+                    deleter_.operator()(resource_);
+                    resource_freed_ = true;
+                    resource_ = nullptr;
+                }
+            }
+        }
+
+        T* resource_{nullptr};
+        bool resource_freed_{false};
+        std::atomic<size_t> reference_count_{0};
+        std::atomic<size_t> weak_count_{0};
+        Allocator allocator_{};
+        Deleter deleter_{};
+        std::atomic_bool locked_{false};
+    };
+
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
@@ -203,125 +322,6 @@ private:
             resource_control_ptr_->set_lock(false);
         }
     }
-
-    class ResourceControl_ final
-    {
-    public:
-        explicit ResourceControl_(T* resource, const Allocator& allocator, const Deleter& deleter)
-            : resource_{resource},
-              resource_freed_{false},
-              reference_count_{1},
-              weak_count_{0},
-              allocator_{allocator},
-              deleter_{deleter},
-              locked_{false}
-        {
-        }
-
-        ResourceControl_(const ResourceControl_& other) = delete;
-
-        ResourceControl_(ResourceControl_&& other) noexcept = delete;
-
-        ResourceControl_& operator=(const ResourceControl_& other) = delete;
-
-        ResourceControl_& operator=(ResourceControl_&& other) noexcept = delete;
-
-        // SAFETY: resource managed by explicit free_resource_if() call
-        ~ResourceControl_() = default;
-
-        void increase_reference_count()
-        {
-            reference_count_.fetch_add(1, std::memory_order_acq_rel);
-        }
-
-        // Decrease reference count, free resource if reference count is 0.
-        void decrease_reference_count()
-        {
-            reference_count_.fetch_sub(1, std::memory_order_acq_rel);
-            free_resource_if();
-        }
-
-        void increase_weak_count()
-        {
-            weak_count_.fetch_add(1, std::memory_order_acq_rel);
-        }
-
-        void decrease_weak_count()
-        {
-            weak_count_.fetch_sub(1, std::memory_order_acq_rel);
-        }
-
-        [[nodiscard]] size_t reference_count() const noexcept
-        {
-            return reference_count_.load(std::memory_order_acquire);
-        }
-
-        [[nodiscard]] size_t weak_count() const noexcept
-        {
-            return weak_count_.load(std::memory_order_acquire);
-        }
-
-        [[nodiscard]] T* get_resource() noexcept(false)
-        {
-            if (is_resource_freed())
-            {
-                throw std::runtime_error("Resource already freed!");
-            }
-            return resource_;
-        }
-
-        [[nodiscard]] bool is_resource_freed() const
-        {
-            return resource_freed_;
-        }
-
-        [[nodiscard]] bool is_locked() const noexcept
-        {
-            return locked_.load(std::memory_order_acquire);
-        }
-
-        void set_lock(bool flag) noexcept
-        {
-            locked_.store(flag, std::memory_order_acq_rel);
-        }
-
-        [[nodiscard]] T* allocate()
-        {
-            return allocator_.operator()();
-        }
-
-        [[nodiscard]] Allocator& get_allocator()
-        {
-            return allocator_;
-        }
-
-        [[nodiscard]] Deleter& get_deleter()
-        {
-            return deleter_;
-        }
-
-    private:
-        void free_resource_if()
-        {
-            if (!is_resource_freed())
-            {
-                if (reference_count_.load(std::memory_order_acquire) == 0 && resource_ != nullptr)
-                {
-                    deleter_.operator()(resource_);
-                    resource_freed_ = true;
-                    resource_ = nullptr;
-                }
-            }
-        }
-
-        T* resource_{nullptr};
-        bool resource_freed_{false};
-        std::atomic<size_t> reference_count_{0};
-        std::atomic<size_t> weak_count_{0};
-        Allocator allocator_{};
-        Deleter deleter_{};
-        std::atomic_bool locked_{false};
-    };
 
     ResourceControl_* resource_control_ptr_{nullptr};
 };
