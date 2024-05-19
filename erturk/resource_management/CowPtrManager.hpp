@@ -144,6 +144,7 @@ private:
         return *resource_control_ptr_->get_resource();
     }
 
+    // May need spinlock due to long copy operations, while reference count may hit 1
     void detach_resource_if() noexcept(false)
     {
         if (resource_control_ptr_->reference_count() > 1)
