@@ -14,7 +14,7 @@
 namespace erturk::resource_management
 {
 template <class T, class Allocator, class Deleter>
-class CowPtrManager final
+class CowLifetimeCounter final
 {
     class ResourceControl_ final
     {
@@ -145,13 +145,13 @@ class CowPtrManager final
                   "Deleter parameter must be T* and return void");
 
 public:
-    explicit CowPtrManager(T* resource_ptr, const Allocator& allocator, const Deleter& deleter)
+    explicit CowLifetimeCounter(T* resource_ptr, const Allocator& allocator, const Deleter& deleter)
         : resource_control_ptr_{new ResourceControl_{resource_ptr, allocator, deleter}}
     {
     }
 
     // Apply pointer shallow copy and increase reference count
-    CowPtrManager(const CowPtrManager& other) noexcept(false)
+    CowLifetimeCounter(const CowLifetimeCounter& other) noexcept(false)
     {
         if (other.resource_control_ptr_ == nullptr)
         {
@@ -162,7 +162,7 @@ public:
     }
 
     // Take over ownership
-    CowPtrManager(CowPtrManager&& other) noexcept(false)
+    CowLifetimeCounter(CowLifetimeCounter&& other) noexcept(false)
     {
         if (other.resource_control_ptr_ == nullptr)
         {
@@ -173,7 +173,7 @@ public:
     }
 
     // Apply pointer shallow copy and increase reference count
-    CowPtrManager& operator=(const CowPtrManager& other)
+    CowLifetimeCounter& operator=(const CowLifetimeCounter& other)
     {
         if (this != &other && other.resource_control_ptr_ != nullptr)
         {
@@ -189,7 +189,7 @@ public:
     }
 
     // Take over ownership
-    CowPtrManager& operator=(CowPtrManager&& other) noexcept
+    CowLifetimeCounter& operator=(CowLifetimeCounter&& other) noexcept
     {
         if (this != &other && other.resource_control_ptr_ != nullptr)
         {
@@ -206,7 +206,7 @@ public:
 
     // Check weak and reference count 0. If so, free resource control.
     // Otherwise, let other CowPtr storage handle free resource control.
-    ~CowPtrManager()
+    ~CowLifetimeCounter()
     {
         resource_control_ptr_->decrease_reference_count();
 
@@ -327,7 +327,7 @@ private:
 };
 
 template <class T, class... Args>
-inline CowPtrManager<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args&&... args) noexcept(false)
+inline CowLifetimeCounter<T, std::function<T*()>, std::function<void(T*)>> make_cow_ptr(Args&&... args) noexcept(false)
 {
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
@@ -343,7 +343,7 @@ inline CowPtrManager<T, std::function<T*()>, std::function<void(T*)>> make_cow_p
             delete address;
         }
     };
-    return CowPtrManager<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
+    return CowLifetimeCounter<T, std::function<T*()>, std::function<void(T*)>>{new T{std::forward<Args>(args)...},
                                                                           defaultAllocator, defaultDeleter};
 }
 
