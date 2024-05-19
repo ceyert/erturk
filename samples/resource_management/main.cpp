@@ -6,27 +6,27 @@
 class Person
 {
 public:
-    std::string name;
-    int age;
+    std::string name_;
+    int age_;
 
-    Person(std::string name, int age) : name(std::move(name)), age(age)
+    Person(std::string name, int age) : name_(std::move(name)), age_(age)
     {
-        std::cout << name << " " << age << "\n";
+        std::cout << name_ << " - " << age_ << "\n";
     }
 
-    Person(const Person& other) : name(other.name), age(other.age) {}
+    Person(const Person& other) = default;
 };
 
 int main()
 {
+    auto cow1 = erturk::resource_management::make_cow_ptr<Person>(std::string{"Hi"}, 100);
     {
-        auto cow1 = erturk::resource_management::make_cow_ptr<Person>("Hi", 100);
-        auto cow2 = erturk::resource_management::make_cow_ptr<Person>("Hey", 200);
+        auto cow2 = cow1;
 
-        cow1 = cow2;
-
-        cow1.operator->()->age = 600;
+        cow2.operator->()->age_ = 600;
     }
+
+    cow1.operator->()->age_ = 300;
 
     return 0;
 }
