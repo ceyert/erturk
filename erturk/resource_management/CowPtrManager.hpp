@@ -303,12 +303,6 @@ inline CowPtrManager<T, std::function<T*()>, std::function<void(T*)>> make_cow_p
         return new T{args...};
     };
 
-    /*
-    std::function<T*(void)> defaultAllocator = [... arguments = std::forward<Args>(args)]() -> T* {
-        return new T{arguments...};
-    };
-    */
-
     std::function<void(T*)> defaultDeleter = [](T* address) -> void {
         if (address != nullptr)
         {
