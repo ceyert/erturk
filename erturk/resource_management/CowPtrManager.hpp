@@ -298,7 +298,7 @@ inline CowPtrManager<T, std::function<T*()>, std::function<void(T*)>> make_cow_p
     static_assert((erturk::meta::is_copy_constructible<T>::value || erturk::meta::is_move_constructible<T>::value),
                   "T must be copy constructible or move constructible!");
 
-    // Capture by value!
+    // Capture arguments by value!
     std::function<T*(void)> defaultAllocator = [args...]() -> T* {
         return new T{args...};
     };
