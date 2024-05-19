@@ -57,13 +57,9 @@ public:
             if (resource_control_ptr_ != other.resource_control_ptr_)
             {
                 resource_control_ptr_->decrease_reference_count();  // leave previous resource
-
-                resource_control_ptr_ = other.resource_control_ptr_;
-                resource_control_ptr_->increase_reference_count();
-                return *this;
             }
+            resource_control_ptr_ = other.resource_control_ptr_;  // set new address or current address
             resource_control_ptr_->increase_reference_count();
-            resource_control_ptr_ = other.resource_control_ptr_;
         }
         return *this;
     }
@@ -77,7 +73,7 @@ public:
             {
                 resource_control_ptr_->decrease_reference_count();  // leave previous resource
             }
-            resource_control_ptr_ = other.resource_control_ptr_;
+            resource_control_ptr_ = other.resource_control_ptr_;  // set new address or current address
 
             other.resource_control_ptr_ = nullptr;
         }
