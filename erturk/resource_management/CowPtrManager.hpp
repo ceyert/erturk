@@ -152,16 +152,13 @@ private:
     {
         if (resource_control_ptr_->reference_count() > 1)
         {
-            ResourceControl_* old_resource_control = resource_control_ptr_;
-
-            // decrease old reference count
-            old_resource_control->decrease_reference_count();
+            // decrease reference count
+            resource_control_ptr_->decrease_reference_count();
 
             T* new_resource_ptr = resource_control_ptr_->allocate();
 
             if (new_resource_ptr == nullptr)
             {
-                resource_control_ptr_->decrease_reference_count();
                 throw std::runtime_error("Failed to allocate memory!");
             }
 
@@ -169,13 +166,15 @@ private:
             // T has responsibility to handle deep copy
             if constexpr (erturk::meta::is_copy_constructible<T>::value)
             {
-                new_resource_ptr->operator=(*old_resource_control->get_resource());
+                new_resource_ptr->operator=(*resource_control_ptr_->get_resource());  // guarantee resource not freed!
             }
             else
             {
-                new_resource_ptr->operator=(std::move(*old_resource_control->get_resource()));
+                new_resource_ptr->operator=(
+                    std::move(*resource_control_ptr_->get_resource()));  // guarantee resource not freed!
             }
 
+            ResourceControl_* old_resource_control = resource_control_ptr_;
             // Allocate new resource control
             resource_control_ptr_ = new ResourceControl_{new_resource_ptr, old_resource_control->get_allocator(),
                                                          old_resource_control->get_deleter()};
