@@ -4,7 +4,12 @@
 #include "../meta_types/TypeTrait.hpp"
 #include <atomic>
 #include <functional>
+#include <thread>
 #include <utility>
+#if defined(__x86_64__)
+#include <immintrin.h>
+#define USE_X86_PAUSE
+#endif
 
 namespace erturk::resource_management
 {
@@ -85,6 +90,7 @@ public:
     ~CowPtrManager()
     {
         resource_control_ptr_->decrease_reference_count();
+
         if (resource_control_ptr_->reference_count() == 0 && resource_control_ptr_->weak_count() == 0)
         {
             delete resource_control_ptr_;
@@ -144,11 +150,29 @@ private:
         return *resource_control_ptr_->get_resource();
     }
 
-    // May need spinlock due to long copy operations, while reference count may hit 1
     void detach_resource_if() noexcept(false)
     {
         if (resource_control_ptr_->reference_count() > 1)
         {
+            if (resource_control_ptr_->is_locked())
+            {
+                while (resource_control_ptr_->is_locked())
+                {
+#ifdef USE_X86_PAUSE
+                    _mm_pause();
+#else
+                    std::this_thread::yield();
+#endif
+                }
+
+                // Check once again after a certain wait!
+                if (resource_control_ptr_->reference_count() == 1)
+                {
+                    return;
+                }
+            }
+            resource_control_ptr_->set_lock(true);
+
             // decrease reference count
             resource_control_ptr_->decrease_reference_count();
 
@@ -175,6 +199,8 @@ private:
             // Allocate new resource control
             resource_control_ptr_ = new ResourceControl_{new_resource_ptr, old_resource_control->get_allocator(),
                                                          old_resource_control->get_deleter()};
+
+            resource_control_ptr_->set_lock(false);
         }
     }
 
@@ -187,7 +213,8 @@ private:
               reference_count_{1},
               weak_count_{0},
               allocator_{allocator},
-              deleter_{deleter}
+              deleter_{deleter},
+              locked_{false}
         {
         }
 
@@ -248,6 +275,16 @@ private:
             return resource_freed_;
         }
 
+        [[nodiscard]] bool is_locked() const noexcept
+        {
+            return locked_.load(std::memory_order_acquire);
+        }
+
+        void set_lock(bool flag) noexcept
+        {
+            locked_.store(flag, std::memory_order_acq_rel);
+        }
+
         [[nodiscard]] T* allocate()
         {
             return allocator_.operator()();
@@ -271,8 +308,8 @@ private:
                 if (reference_count_.load(std::memory_order_acquire) == 0 && resource_ != nullptr)
                 {
                     deleter_.operator()(resource_);
-                    resource_ = nullptr;
                     resource_freed_ = true;
+                    resource_ = nullptr;
                 }
             }
         }
@@ -283,6 +320,7 @@ private:
         std::atomic<size_t> weak_count_{0};
         Allocator allocator_{};
         Deleter deleter_{};
+        std::atomic_bool locked_{false};
     };
 
     ResourceControl_* resource_control_ptr_{nullptr};
