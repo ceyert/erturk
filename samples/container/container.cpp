@@ -1,6 +1,6 @@
-#include "../../erturk/container/Array.hpp"
-#include "../../erturk/container/DynamicArray.hpp"
-#include "../../erturk/container/TypeBufferArray.hpp"
+#include "../../erturk/containers/Array.hpp"
+#include "../../erturk/containers/DynamicTypeBufferArray.hpp"
+#include "../../erturk/containers/TypeBufferArray.hpp"
 #include <iostream>
 
 struct Point
@@ -132,7 +132,7 @@ void array_examples()
 void dynamic_array_examples()
 {
     {
-        erturk::container::DynamicArray<int> vec{};
+        erturk::container::DynamicTypeBufferArray<int> vec{};
 
         for (int i = 0; i < 1000; i++)
         {
@@ -147,7 +147,7 @@ void dynamic_array_examples()
     }
 
     {
-        erturk::container::DynamicArray<Point> points;
+        erturk::container::DynamicTypeBufferArray<Point> points;
         points.emplace_back(Point{1, 2});
         points.push_back(Point{3, 4});
 
@@ -159,7 +159,7 @@ void dynamic_array_examples()
     }
 
     {
-        erturk::container::DynamicArray<double> doubles{};
+        erturk::container::DynamicTypeBufferArray<double> doubles{};
         doubles.reserve(10);
 
         for (double d = 0.0; d < 10.0; d += 1.0)
@@ -172,13 +172,13 @@ void dynamic_array_examples()
     }
 
     {
-        erturk::container::DynamicArray<std::string> original{};
+        erturk::container::DynamicTypeBufferArray<std::string> original{};
         original.push_back("Hello");
         original.push_back("World");
 
-        erturk::container::DynamicArray<std::string> copy = original;
+        erturk::container::DynamicTypeBufferArray<std::string> copy = original;
 
-        erturk::container::DynamicArray<std::string> moved = std::move(original);
+        erturk::container::DynamicTypeBufferArray<std::string> moved = std::move(original);
 
         std::cout << "Copied array: ";
         for (const std::string& s : copy)
@@ -196,7 +196,7 @@ void dynamic_array_examples()
     }
 
     {
-        erturk::container::DynamicArray<char> characters{};
+        erturk::container::DynamicTypeBufferArray<char> characters{};
         characters.push_back('A');
         characters.push_back('C');
         characters.insert(characters.begin(), 'B');

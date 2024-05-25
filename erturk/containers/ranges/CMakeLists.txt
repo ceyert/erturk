@@ -6,4 +6,4 @@ target_include_directories(
         ranges INTERFACE
         ${CMAKE_SOURCE_DIR}/erturk/ranges/InitializerList.hpp)
 
-add_subdirectory(views)
+add_subdirectory(range_views)

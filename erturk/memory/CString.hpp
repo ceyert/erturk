@@ -1,11 +1,11 @@
-#ifndef ERTURK_STRING_LITERAL_H
-#define ERTURK_STRING_LITERAL_H
+#ifndef ERTURK_C_STRING_H
+#define ERTURK_C_STRING_H
 
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 
-namespace erturk::string_literal
+namespace erturk::cstring
 {
 
 inline constexpr bool isalnum(char c)
@@ -166,6 +166,6 @@ inline void reverseStr(char* str, int length)
     }
 }
 
-}  // namespace erturk::string_literal
+}  // namespace erturk::cstring
 
-#endif  // ERTURK_STRING_LITERAL_H
+#endif  // ERTURK_C_STRING_H
