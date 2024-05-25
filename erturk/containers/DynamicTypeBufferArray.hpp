@@ -75,6 +75,7 @@ public:
         typeBufferArrayPtr_ = nullptr;
     }
 
+    // TODO: no need new allocation, check size with other then override elements
     DynamicTypeBufferArray& operator=(const DynamicTypeBufferArray& other) noexcept(false)
     {
         static_assert(erturk::meta::is_copy_constructible<T>::value, "T must be copy constructible!");
