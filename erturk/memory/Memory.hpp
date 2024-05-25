@@ -19,7 +19,7 @@ inline void* memmove(void* destination, const void* source, const size_t size)
     const char* src_base = static_cast<const char*>(source);
 
     // check source and destination memory regions overlap
-    if ((src_base < dest_base) && (dest_base < src_base + size)) // overlap
+    if ((src_base < dest_base) && (dest_base < src_base + size))  // overlap
     {
         // copy from end to start to avoid overwriting
         size_t idx = size;
@@ -29,7 +29,7 @@ inline void* memmove(void* destination, const void* source, const size_t size)
             idx--;
         }
     }
-    else // no overlap
+    else  // no overlap
     {
         // copy from start to end
         size_t idx = 0;
@@ -42,7 +42,7 @@ inline void* memmove(void* destination, const void* source, const size_t size)
     return destination;
 }
 
-inline void* memset(void* destination, int value, size_t size)
+inline void* memset(void* destination, int value, const size_t size)
 {
     if (destination == nullptr || size <= 0)
     {
@@ -51,16 +51,56 @@ inline void* memset(void* destination, int value, size_t size)
 
     unsigned char* addr = static_cast<unsigned char*>(destination);
     unsigned char val = static_cast<unsigned char>(value);
-    while (size > 0)
+
+    size_t idx = 0;
+    while (size > idx)
     {
         *addr++ = val;
-        size--;
+        idx++;
     }
 
     return destination;
 }
 
-inline void* memcpy(void* destination, const void* source, size_t size)
+template <class T, class T_Iterator>
+inline constexpr T_Iterator memset(const T_Iterator dest_begin, const T_Iterator dest_end, const T& value)
+{
+    if (dest_begin == nullptr || dest_end == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_dest = dest_begin;
+
+    while (curr_dest != dest_end)
+    {
+        *curr_dest = value;
+
+        curr_dest++;  // increase to next T memory layout
+    }
+    return curr_dest;
+}
+
+template <class T, class T_Iterator, class Size>
+inline constexpr T_Iterator memset_n(const T_Iterator dest_begin, const Size size, const T& value)
+{
+    if (dest_begin == nullptr || size <= 0)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_dest = dest_begin;
+
+    Size size_ = size;
+    while (size_ > 0)
+    {
+        *curr_dest = value;
+
+        curr_dest++;  // increase to next T memory layout
+        size_++;
+    }
+    return curr_dest;
+}
+
+inline void* memcpy(const void* source, void* destination, const size_t size)
 {
     if (destination == nullptr || source == nullptr || size <= 0)
     {
@@ -70,12 +110,54 @@ inline void* memcpy(void* destination, const void* source, size_t size)
     char* dest = static_cast<char*>(destination);
     const char* src = static_cast<const char*>(source);
 
-    while (size > 0)
+    size_t idx = 0;
+    while (size > idx)
     {
         *dest++ = *src++;
-        size--;
+        idx++;
     }
+
     return destination;
+}
+
+template <class T, class T_Iterator>
+inline constexpr T_Iterator memcpy(T_Iterator src_begin, const T_Iterator src_end, const T_Iterator dest_begin)
+{
+    if (src_begin == nullptr || src_end == nullptr || dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_dest = dest_begin;
+
+    while (src_begin != src_end)
+    {
+        *curr_dest = *src_begin;
+
+        src_begin++;  // increase to next T memory layout
+        curr_dest++;  // increase to next T memory layout
+    }
+    return curr_dest;
+}
+
+template <class T, class T_Iterator, class Size>
+inline constexpr T_Iterator memcpy_n(T_Iterator src_begin, const Size size, const T_Iterator dest_begin)
+{
+    if (src_begin == nullptr || size <= 0 || dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+    T_Iterator curr_dest = dest_begin;
+
+    Size size_ = size;
+    while (size_ > 0)
+    {
+        *curr_dest = *src_begin;
+
+        src_begin++;  // increase to next T memory layout
+        curr_dest++;  // increase to next T memory layout
+        size_--;
+    }
+    return curr_dest;
 }
 
 inline int memcmp(const void* str1, const void* str2, size_t size)
@@ -93,7 +175,7 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
         if (*str1_ != *str2_)
         {
             return (*str1_ < *str2_) ? -1 : 1;
-        } 
+        }
         str1_++;
         str2_++;
         size--;
