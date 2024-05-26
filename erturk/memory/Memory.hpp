@@ -8,40 +8,6 @@
 namespace erturk::memory
 {
 
-inline void* memmove(void* destination, const void* source, const size_t size)
-{
-    if (destination == nullptr || source == nullptr || size <= 0)
-    {
-        return nullptr;
-    }
-
-    char* dest_base = static_cast<char*>(destination);
-    const char* src_base = static_cast<const char*>(source);
-
-    // check source and destination memory regions overlap
-    if ((src_base < dest_base) && (dest_base < src_base + size))  // overlap
-    {
-        // copy from end to start to avoid overwriting
-        size_t idx = size;
-        while (idx > 0)
-        {
-            dest_base[idx] = src_base[idx];
-            idx--;
-        }
-    }
-    else  // no overlap
-    {
-        // copy from start to end
-        size_t idx = 0;
-        while (idx < size)
-        {
-            dest_base[idx] = src_base[idx];
-            ++idx;
-        }
-    }
-    return destination;
-}
-
 inline void* memset(void* destination, int value, const size_t size)
 {
     if (destination == nullptr || size <= 0)
@@ -181,6 +147,62 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
         size--;
     }
     return 0;
+}
+
+/*
+Memory overlapping is source and destination buffers have the same memory addresses.
+
+During the copy, data corruption occurs because a source is on the left side of the destination, the data of source is
+already changed.
+
+memmove is used to copy a block of memory from source to destination memory address with preserving overlapping memory
+regions.
+
+ref: https://opensource.apple.com/source/network_cmds/network_cmds-481.20.1/unbound/compat/memmove.c.auto.html
+*/
+inline void* memmove(void* destination, const void* source, size_t size)
+{
+    if (destination == nullptr || source == nullptr || size <= 0)
+    {
+        return nullptr;
+    }
+
+    uint8_t* from = (uint8_t*)source;
+    uint8_t* to = (uint8_t*)destination;
+
+    if (from == to || size == 0)
+    {
+        return destination;
+    }
+
+    if (to > from && to - from < (int)size)
+    {
+        /* to overlaps with from */
+        /*  <from......>         */
+        /*         <to........>  */
+        /* copy in reverse, to avoid overwriting from */
+        for (int i = size - 1; i >= 0; i--)
+        {
+            to[i] = from[i];
+        }
+        return destination;
+    }
+    if (from > to && from - to < (int)size)
+    {
+        /* to overlaps with from */
+        /*        <from......>   */
+        /*  <to........>         */
+        /* copy forwards, to avoid overwriting from */
+        for (size_t i = 0; i < size; i++)
+        {
+            to[i] = from[i];
+        }
+        return destination;
+    }
+
+    memcpy(source, destination, size);
+
+    return destination;
 }
 
 }  // namespace erturk::memory
