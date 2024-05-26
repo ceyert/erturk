@@ -24,6 +24,48 @@ private:
     static constexpr unsigned char DEFAULT_MUL_ = 2;
 
 public:
+    class Iterator
+    {
+    public:
+        explicit Iterator(T* ptr) : t_ptr_{ptr} {}
+
+        Iterator& operator++()
+        {
+            t_ptr_++;
+            return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator temp = *this;
+            t_ptr_++;
+            return temp;
+        }
+
+        [[nodiscard]] bool operator==(const Iterator& other) const
+        {
+            return t_ptr_ == other.t_ptr_;
+        }
+
+        [[nodiscard]] bool operator!=(const Iterator& other) const
+        {
+            return t_ptr_ != other.t_ptr_;
+        }
+
+        [[nodiscard]] T& operator*()
+        {
+            return *t_ptr_;
+        }
+
+        [[nodiscard]] T* get() const
+        {
+            return t_ptr_;
+        }
+
+    private:
+        T* t_ptr_;
+    };
+
     explicit DynamicTypeBufferArray() noexcept(false)
         : capacity_{DEFAULT_CAPACITY_}, size_{0}, typeBufferArrayPtr_{Allocator::allocate(capacity_)}
     {
@@ -198,80 +240,6 @@ public:
         size_ = 0;
     }
 
-private:
-    void expand_allocation(size_t new_capacity) noexcept(false)
-    {
-        if (new_capacity > capacity_)
-        {
-            T* new_buffer = Allocator::allocate(new_capacity);
-
-            if (typeBufferArrayPtr_ == nullptr)
-            {
-                throw std::runtime_error("Failed to allocate memory!");
-            }
-
-            erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(typeBufferArrayPtr_,
-                                                                         typeBufferArrayPtr_ + size_, new_buffer);
-
-            for (size_t idx = 0; idx < size_; idx++)
-            {
-                erturk::type_buffer_memory::destruct_at(typeBufferArrayPtr_ + idx);
-            }
-            Allocator::deallocate(typeBufferArrayPtr_);
-
-            typeBufferArrayPtr_ = new_buffer;
-            capacity_ = new_capacity;
-        }
-    }
-
-private:
-    size_t capacity_{0};
-    size_t size_{0};
-    T* typeBufferArrayPtr_{nullptr};
-
-public:
-    class Iterator
-    {
-    public:
-        explicit Iterator(T* ptr) : t_ptr_{ptr} {}
-
-        Iterator& operator++()
-        {
-            t_ptr_++;
-            return *this;
-        }
-
-        Iterator operator++(int)
-        {
-            Iterator temp = *this;
-            t_ptr_++;
-            return temp;
-        }
-
-        [[nodiscard]] bool operator==(const Iterator& other) const
-        {
-            return t_ptr_ == other.t_ptr_;
-        }
-
-        [[nodiscard]] bool operator!=(const Iterator& other) const
-        {
-            return t_ptr_ != other.t_ptr_;
-        }
-
-        [[nodiscard]] T& operator*()
-        {
-            return *t_ptr_;
-        }
-
-        [[nodiscard]] T* get() const
-        {
-            return t_ptr_;
-        }
-
-    private:
-        T* t_ptr_;
-    };
-
     [[nodiscard]] Iterator begin()
     {
         return Iterator{typeBufferArrayPtr_};
@@ -371,6 +339,37 @@ public:
         size_--;
         return Iterator{typeBufferArrayPtr_ + erase_index};
     }
+
+private:
+    void expand_allocation(size_t new_capacity) noexcept(false)
+    {
+        if (new_capacity > capacity_)
+        {
+            T* new_buffer = Allocator::allocate(new_capacity);
+
+            if (typeBufferArrayPtr_ == nullptr)
+            {
+                throw std::runtime_error("Failed to allocate memory!");
+            }
+
+            erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(typeBufferArrayPtr_,
+                                                                         typeBufferArrayPtr_ + size_, new_buffer);
+
+            for (size_t idx = 0; idx < size_; idx++)
+            {
+                erturk::type_buffer_memory::destruct_at(typeBufferArrayPtr_ + idx);
+            }
+            Allocator::deallocate(typeBufferArrayPtr_);
+
+            typeBufferArrayPtr_ = new_buffer;
+            capacity_ = new_capacity;
+        }
+    }
+
+private:
+    size_t capacity_{0};
+    size_t size_{0};
+    T* typeBufferArrayPtr_{nullptr};
 };
 }  // namespace erturk::container
 #endif  // ERTURK_DYNAMIC_ARRAY_H
