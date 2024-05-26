@@ -20,7 +20,7 @@ class DynamicTypeBufferArray final
                   "T must be copy constructible or move constructible!");
 
 private:
-    static constexpr size_t DEFAULT_CAPACITY_ = 2;
+    static constexpr size_t DEFAULT_CAPACITY_ = 1;
     static constexpr unsigned char DEFAULT_MUL_ = 2;
 
 public:
@@ -153,9 +153,12 @@ public:
         erturk::type_buffer_memory::construct_at(typeBufferArrayPtr_ + size_++, std::forward<Args>(args)...);
     }
 
-    void reserve(size_t new_capacity)
+    void reserve(const size_t new_capacity)
     {
-        expand_allocation(new_capacity);
+        if (new_capacity > capacity_)
+        {
+            expand_allocation(new_capacity);
+        }
     }
 
     [[nodiscard]] T& operator[](const size_t index) noexcept(false)
@@ -207,7 +210,6 @@ private:
                 throw std::runtime_error("Failed to allocate memory!");
             }
 
-            // Emplace from (base address + insert_index) to (base address + size) into (new_buffer + insert_index + 1)
             erturk::type_buffer_memory::emplace_type_buffers_copy<T, T*>(typeBufferArrayPtr_,
                                                                          typeBufferArrayPtr_ + size_, new_buffer);
 
