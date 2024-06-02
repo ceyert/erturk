@@ -8,15 +8,15 @@
 namespace erturk::memory
 {
 
-inline void* memset(void* destination, int value, const size_t size)
+inline void* memset(void* destination, const int value, const size_t size)
 {
-    if (destination == nullptr || size <= 0)
+    if (destination == nullptr || size == 0)
     {
         return nullptr;
     }
 
     unsigned char* addr = static_cast<unsigned char*>(destination);
-    unsigned char val = static_cast<unsigned char>(value);
+    const unsigned char val = static_cast<const unsigned char>(value);
 
     size_t idx = 0;
     while (size > idx)
@@ -35,7 +35,26 @@ inline constexpr T_Iterator memset(const T_Iterator dest_begin, const T_Iterator
     {
         return nullptr;
     }
-    T_Iterator curr_dest = dest_begin;
+
+    T_Iterator curr_dest = const_cast<T_Iterator>(dest_begin);
+
+    while (curr_dest != dest_end)
+    {
+        *curr_dest = value;
+        curr_dest++;  // increase to next T memory layout
+    }
+    return curr_dest;
+}
+
+template <class T>
+inline constexpr T* memset(const T* dest_begin, const T* dest_end, const T& value)
+{
+    if (dest_begin == nullptr || dest_end == nullptr)
+    {
+        return nullptr;
+    }
+
+    T* curr_dest = const_cast<T*>(dest_begin);
 
     while (curr_dest != dest_end)
     {
@@ -53,15 +72,38 @@ inline constexpr T_Iterator memset_n(const T_Iterator dest_begin, const Size siz
     {
         return nullptr;
     }
-    T_Iterator curr_dest = dest_begin;
 
-    Size size_ = size;
-    while (size_ > 0)
+    T_Iterator curr_dest = const_cast<T_Iterator>(dest_begin);
+
+    Size idx = 0;
+
+    while (size > idx)
     {
         *curr_dest = value;
 
         curr_dest++;  // increase to next T memory layout
-        size_++;
+        idx++;
+    }
+    return curr_dest;
+}
+
+template <class T, class Size>
+inline constexpr T* memset_n(const T* dest_begin, const Size size, const T& value)
+{
+    if (dest_begin == nullptr || size <= 0)
+    {
+        return nullptr;
+    }
+
+    T* curr_dest = const_cast<T*>(dest_begin);
+
+    size_t idx = 0;
+
+    while (size > idx)
+    {
+        *curr_dest = value;
+        curr_dest++;  // increase to next T memory layout
+        idx++;
     }
     return curr_dest;
 }
@@ -87,13 +129,35 @@ inline void* memcpy(const void* source, void* destination, const size_t size)
 }
 
 template <class T, class T_Iterator>
-inline constexpr T_Iterator memcpy(T_Iterator src_begin, const T_Iterator src_end, const T_Iterator dest_begin)
+inline constexpr T_Iterator memcpy(const T_Iterator src_begin, const T_Iterator src_end, const T_Iterator dest_begin)
 {
     if (src_begin == nullptr || src_end == nullptr || dest_begin == nullptr)
     {
         return nullptr;
     }
-    T_Iterator curr_dest = dest_begin;
+
+    T_Iterator src_begin_ = const_cast<T_Iterator>(src_begin);
+    T_Iterator curr_dest = const_cast<T_Iterator>(dest_begin);
+
+    while (src_begin_ != src_end)
+    {
+        *curr_dest = *src_begin_;
+
+        src_begin_++;  // increase to next T memory layout
+        curr_dest++;   // increase to next T memory layout
+    }
+    return curr_dest;
+}
+
+template <class T>
+inline constexpr T* memcpy(const T* src_begin, const T* src_end, const T* dest_begin)
+{
+    if (src_begin == nullptr || src_end == nullptr || dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+
+    T* curr_dest = const_cast<T*>(dest_begin);
 
     while (src_begin != src_end)
     {
@@ -106,27 +170,51 @@ inline constexpr T_Iterator memcpy(T_Iterator src_begin, const T_Iterator src_en
 }
 
 template <class T, class T_Iterator, class Size>
-inline constexpr T_Iterator memcpy_n(T_Iterator src_begin, const Size size, const T_Iterator dest_begin)
+inline constexpr T_Iterator memcpy_n(const T_Iterator src_begin, const Size size, const T_Iterator dest_begin)
 {
     if (src_begin == nullptr || size <= 0 || dest_begin == nullptr)
     {
         return nullptr;
     }
-    T_Iterator curr_dest = dest_begin;
 
-    Size size_ = size;
-    while (size_ > 0)
+    T_Iterator src_begin_ = const_cast<T_Iterator>(src_begin);
+    T_Iterator curr_dest = const_cast<T_Iterator>(dest_begin);
+
+    Size idx = 0;
+    while (size > idx)
+    {
+        *curr_dest = *src_begin_;
+
+        src_begin_++;  // increase to next T memory layout
+        curr_dest++;   // increase to next T memory layout
+        idx--;
+    }
+    return curr_dest;
+}
+
+template <class T>
+inline constexpr T* memcpy_n(const T* src_begin, const size_t size, const T* dest_begin)
+{
+    if (src_begin == nullptr || size <= 0 || dest_begin == nullptr)
+    {
+        return nullptr;
+    }
+
+    T* curr_dest = const_cast<T*>(dest_begin);
+
+    size_t idx = 0;
+    while (size > idx)
     {
         *curr_dest = *src_begin;
 
         src_begin++;  // increase to next T memory layout
         curr_dest++;  // increase to next T memory layout
-        size_--;
+        idx++;
     }
     return curr_dest;
 }
 
-inline int memcmp(const void* str1, const void* str2, size_t size)
+inline int memcmp(const void* str1, const void* str2, const size_t size)
 {
     if (str1 == nullptr || str2 == nullptr || size <= 0)
     {
@@ -135,8 +223,9 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
 
     const unsigned char* str1_ = static_cast<const unsigned char*>(str1);
     const unsigned char* str2_ = static_cast<const unsigned char*>(str2);
+    size_t size_ = size;
 
-    while (size > 0)
+    while (size_ > 0)
     {
         if (*str1_ != *str2_)
         {
@@ -144,7 +233,7 @@ inline int memcmp(const void* str1, const void* str2, size_t size)
         }
         str1_++;
         str2_++;
-        size--;
+        size_--;
     }
     return 0;
 }
