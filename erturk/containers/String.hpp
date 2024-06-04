@@ -24,6 +24,7 @@ class BaseString final
 private:
     static constexpr size_t TERMINATOR_ = 1;
     static constexpr size_t DEFAULT_CAPACITY_ = TERMINATOR_;
+    static constexpr size_t DEFAULT_MULTIPLICATION = 2;
 
 public:
     static constexpr size_t NPOS = -1;
@@ -111,14 +112,14 @@ public:
                 throw std::runtime_error("Failed to allocate memory!");
             }
 
-            erturk::memory::memcpy(c_string, charBufferPtr_, size());
+            erturk::memory::memcpy(c_string, data(), size());
 
             charBufferPtr_[size()] = '\0';  // null-terminator at index length
         }
     }
 
     BaseString(const BaseString& other) noexcept(false)
-        : capacity_(other.capacity()), length_(other.size()), charBufferPtr_(Allocator::allocate(capacity_))
+        : capacity_{other.capacity()}, length_{other.size()}, charBufferPtr_{Allocator::allocate(capacity_)}
     {
         if (charBufferPtr_ == nullptr)
         {
@@ -126,15 +127,14 @@ public:
         }
 
         // src_base, src_end, target_base
-        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), charBufferPtr_);
+        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), data());
 
         charBufferPtr_[size()] = '\0';  // null-terminator at index length_
     }
 
     // Take over ownership
-    // TODO: COW needs here
     BaseString(BaseString&& other) noexcept(false)
-        : capacity_(other.capacity()), length_(other.size()), charBufferPtr_(Allocator::allocate(capacity_))
+        : capacity_{other.capacity()}, length_{other.size()}, charBufferPtr_{Allocator::allocate(capacity_)}
     {
         if (charBufferPtr_ == nullptr)
         {
@@ -142,7 +142,7 @@ public:
         }
 
         // src_base, src_end, target_base
-        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), charBufferPtr_);
+        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), data());
 
         charBufferPtr_[size()] = '\0';  // null-terminator at index length_
 
@@ -152,11 +152,10 @@ public:
     ~BaseString()
     {
         clear();
-        Allocator::deallocate(charBufferPtr_);
+        Allocator::deallocate(data());
         charBufferPtr_ = nullptr;
     }
 
-    // TODO: no need new allocation, check size with other then override elements
     BaseString& operator=(const BaseString& other) noexcept(false)
     {
         if (this != &other)
@@ -173,7 +172,7 @@ public:
             length_ = other.size();
 
             // src_base, src_end, target_base
-            erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), charBufferPtr_);
+            erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), data());
 
             charBufferPtr_[size()] = '\0';  // null-terminator at index length_
         }
@@ -197,7 +196,7 @@ public:
             length_ = other.size();
 
             // src_base, src_end, target_base
-            erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), charBufferPtr_);
+            erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), data());
 
             charBufferPtr_[size()] = '\0';  // null-terminator at index length_
 
@@ -208,6 +207,11 @@ public:
 
     BaseString& operator=(const char* c_string) noexcept(false)
     {
+        if (c_string == nullptr)
+        {
+            throw std::runtime_error("Cannot assign null string literal!");
+        }
+
         clear();
 
         size_t literal_len = std::strlen(c_string);
@@ -221,7 +225,7 @@ public:
 
         length_ = literal_len;
 
-        erturk::memory::memcpy_n<CharT>(c_string, size(), charBufferPtr_);
+        erturk::memory::memcpy_n<CharT>(c_string, size(), data());
 
         charBufferPtr_[size()] = '\0';  // null-terminator at index length_
 
@@ -237,7 +241,9 @@ public:
             expand_allocation(required_capacity);
         }
 
-        charBufferPtr_[length_++] = ch;  // override null-terminator with value
+        charBufferPtr_[size()] = ch;  // override null-terminator with value
+
+        length_++;
 
         charBufferPtr_[size()] = '\0';  // add null-terminator at index length_
     }
@@ -246,7 +252,9 @@ public:
     {
         CharT ch = charBufferPtr_[size() - TERMINATOR_];  // get char before null-terminator
 
-        charBufferPtr_[--length_] = '\0';  // add null-terminator at index length_ - 1
+        charBufferPtr_[size() - TERMINATOR_] = '\0';  // add null-terminator at index length_ - 1
+
+        length_--;
 
         return ch;
     }
@@ -260,7 +268,9 @@ public:
             expand_allocation(required_capacity);
         }
 
-        charBufferPtr_[length_++] = ch;  // override null-terminator with ch
+        charBufferPtr_[size()] = ch;  // override null-terminator with ch
+
+        length_++;
 
         charBufferPtr_[size()] = '\0';  // null-terminator at index length_
     }
@@ -275,15 +285,20 @@ public:
         }
 
         // src_base, src_end, target_base
-        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), charBufferPtr_ + size());
+        erturk::memory::memcpy<CharT>(other.data(), other.data() + other.size(), data() + size());
 
         length_ += other.size();
 
-        charBufferPtr_[length_] = '\0';
+        charBufferPtr_[size()] = '\0';
     }
 
-    void append(const char* c_string)
+    void append(const char* c_string) noexcept(false)
     {
+        if (c_string == nullptr)
+        {
+            throw std::runtime_error("Cannot append null string literal!");
+        }
+
         size_t literal_len = std::strlen(c_string);
 
         size_t required_capacity = literal_len + size() + TERMINATOR_;
@@ -294,7 +309,7 @@ public:
         }
 
         // src_base, src_end, target_base
-        erturk::memory::memcpy<CharT>(c_string, c_string + literal_len, charBufferPtr_ + size());
+        erturk::memory::memcpy<CharT>(c_string, c_string + literal_len, data() + size());
 
         length_ += literal_len;
 
@@ -307,21 +322,6 @@ public:
         {
             expand_allocation(new_capacity);
         }
-    }
-
-    [[nodiscard]] const CharT* c_str() const
-    {
-        return charBufferPtr_ != nullptr ? charBufferPtr_ : "";
-    }
-
-    [[nodiscard]] CharT* data() const
-    {
-        return charBufferPtr_;
-    }
-
-    [[nodiscard]] CharT* data()
-    {
-        return charBufferPtr_;
     }
 
     [[nodiscard]] const CharT& front() const
@@ -360,6 +360,39 @@ public:
         return charBufferPtr_[index];
     }
 
+    [[nodiscard]] CharT& at(const size_t index) noexcept(false)
+    {
+        if (index > size() - TERMINATOR_)
+        {
+            throw std::runtime_error("Out of bounds index!");
+        }
+        return charBufferPtr_[index];
+    }
+
+    [[nodiscard]] const CharT& at(const size_t index) const noexcept(false)
+    {
+        if (index > size() - TERMINATOR_)
+        {
+            throw std::runtime_error("Out of bounds index!");
+        }
+        return charBufferPtr_[index];
+    }
+
+    [[nodiscard]] const CharT* c_str() const
+    {
+        return charBufferPtr_ != nullptr ? charBufferPtr_ : "";
+    }
+
+    [[nodiscard]] CharT* data() const
+    {
+        return charBufferPtr_;
+    }
+
+    [[nodiscard]] CharT* data()
+    {
+        return charBufferPtr_;
+    }
+
     [[nodiscard]] size_t size() const
     {
         return length_;
@@ -374,22 +407,22 @@ public:
     {
         if (charBufferPtr_ != nullptr)
         {
-            erturk::memory::memset_n(charBufferPtr_, size(), '\0');
+            erturk::memory::memset_n(data(), size(), '\0');
         }
 
         length_ = 0;
     }
 
-    [[nodiscard]] BaseString substr(size_t index, size_t length = BaseString::NPOS) const noexcept(false)
+    [[nodiscard]] BaseString substr(size_t start_idx, size_t length) const noexcept(false)
     {
-        if (index >= size() - TERMINATOR_)
+        if (start_idx >= size() - TERMINATOR_)
         {
             throw std::out_of_range("Starting position is out of bounds");
         }
 
-        if (length == BaseString::NPOS || (index + length) > size())
+        if (start_idx + length > size())
         {
-            length = size() - index;  // set range index to size_
+            length = size() - start_idx;  // Shrink length
         }
 
         BaseString result{};
@@ -397,21 +430,21 @@ public:
         size_t idx = 0;
         while (idx < length)
         {
-            result.push_back(charBufferPtr_[index + idx]);
+            result.push_back(charBufferPtr_[start_idx + idx]);
             idx++;
         }
 
         return result;
     }
 
-    [[nodiscard]] size_t find_first(const BaseString& string, const size_t index = 0) const
+    [[nodiscard]] size_t find_first(const BaseString& from_str, const size_t index = 0) const
     {
-        if (string.size() == 0 || index >= size())
+        if (from_str.size() == 0 || index >= size())
         {
             return BaseString::NPOS;
         }
 
-        if (string.size() == 0 && string.size() > size())
+        if (from_str.size() == 0 && from_str.size() > size())
         {
             return BaseString::NPOS;
         }
@@ -421,7 +454,7 @@ public:
         window.baseIndex_ = index;
         window.endIndex_ = index;
 
-        size_t patternSize = string.size();
+        size_t patternSize = from_str.size();
 
         while (window.endIndex_ < size())
         {
@@ -434,10 +467,11 @@ public:
 
             bool matchFound = true;
 
+            // Match a current window with the pattern
             size_t idx = 0;
             while (idx < patternSize)
             {
-                if (string.operator[](idx) == operator[](idx + window.baseIndex_))
+                if (from_str.operator[](idx) == operator[](idx + window.baseIndex_))
                 {
                     idx++;
                     continue;
@@ -451,7 +485,7 @@ public:
                 // Move window forward by one
                 window.baseIndex_++;
 
-                // Reset window to base
+                // Shrink window to base
                 window.endIndex_ = window.baseIndex_;
                 continue;
             }
@@ -460,14 +494,14 @@ public:
         return BaseString::NPOS;
     }
 
-    [[nodiscard]] size_t find_first(const char* c_string, const size_t index = 0) const
+    [[nodiscard]] size_t find_first(const char* from_c_string, const size_t index = 0) const
     {
         if (index >= size())
         {
             return BaseString::NPOS;
         }
 
-        size_t literal_len = std::strlen(c_string);
+        size_t literal_len = std::strlen(from_c_string);
 
         if (literal_len == 0 && literal_len > size())
         {
@@ -492,10 +526,11 @@ public:
 
             bool matchFound = true;
 
+            // Match a current window with the pattern
             size_t idx = 0;
             while (idx < patternSize)
             {
-                if (c_string[idx] == operator[](idx + window.baseIndex_))
+                if (from_c_string[idx] == operator[](idx + window.baseIndex_))
                 {
                     idx++;
                     continue;
@@ -509,11 +544,11 @@ public:
                 // Move window forward by one
                 window.baseIndex_++;
 
-                // Reset window to base
+                // Shrink window to base
                 window.endIndex_ = window.baseIndex_;
                 continue;
             }
-            return window.baseIndex_;  // return base index of matched pattern
+            return window.baseIndex_;  // return base index of the matched pattern
         }
         return BaseString::NPOS;
     }
@@ -569,19 +604,19 @@ public:
     // base pointer
     [[nodiscard]] Iterator begin() const
     {
-        return Iterator{charBufferPtr_};
+        return Iterator{data()};
     }
 
     // end pointer
     [[nodiscard]] Iterator end() const
     {
-        return Iterator{charBufferPtr_ + size()};
+        return Iterator{data() + size()};
     }
 
 private:
-    void expand_allocation(size_t new_capacity) noexcept(false)
+    void expand_allocation(size_t new_capacity, size_t times = DEFAULT_MULTIPLICATION) noexcept(false)
     {
-        CharT* new_buffer = Allocator::allocate(new_capacity);
+        CharT* new_buffer = Allocator::allocate(new_capacity * times);
 
         if (charBufferPtr_ == nullptr)
         {
@@ -589,8 +624,9 @@ private:
         }
 
         // src_base, src_end, target_base
-        erturk::memory::memcpy<CharT>(charBufferPtr_, charBufferPtr_ + size(), new_buffer);
-        Allocator::deallocate(charBufferPtr_);
+        erturk::memory::memcpy<CharT>(data(), data() + size(), new_buffer);
+
+        Allocator::deallocate(data());
 
         charBufferPtr_ = new_buffer;
         capacity_ = new_capacity;

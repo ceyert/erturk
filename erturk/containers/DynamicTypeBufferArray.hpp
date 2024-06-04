@@ -21,7 +21,7 @@ class DynamicTypeBufferArray final
 
 private:
     static constexpr size_t DEFAULT_CAPACITY_ = 1;
-    static constexpr unsigned char DEFAULT_MUL_ = 2;
+    static constexpr unsigned char DEFAULT_MULTIPLICATION = 2;
 
 public:
     class Iterator
@@ -169,7 +169,7 @@ public:
 
         if (size_ >= capacity_)
         {
-            expand_allocation(capacity_ * DEFAULT_MUL_);
+            expand_allocation(capacity_);
         }
         erturk::type_buffer_memory::construct_at(typeBufferArrayPtr_ + size_++, tVal);
     }
@@ -180,7 +180,7 @@ public:
 
         if (size_ >= capacity_)
         {
-            expand_allocation(capacity_ * DEFAULT_MUL_);
+            expand_allocation(capacity_);
         }
         erturk::type_buffer_memory::construct_at(typeBufferArrayPtr_ + size_++, std::move(tVal));
     }
@@ -190,7 +190,7 @@ public:
     {
         if (size_ >= capacity_)
         {
-            expand_allocation(capacity_ * DEFAULT_MUL_);
+            expand_allocation(capacity_);
         }
         erturk::type_buffer_memory::construct_at(typeBufferArrayPtr_ + size_++, std::forward<Args>(args)...);
     }
@@ -271,7 +271,7 @@ public:
 
         if (size_ >= capacity_)
         {
-            size_t new_capacity = capacity_ * DEFAULT_MUL_;
+            size_t new_capacity = capacity_ * DEFAULT_MULTIPLICATION;
             T* new_buffer = Allocator::allocate(new_capacity);
 
             if (new_buffer == nullptr)
@@ -341,11 +341,11 @@ public:
     }
 
 private:
-    void expand_allocation(size_t new_capacity) noexcept(false)
+    void expand_allocation(size_t new_capacity, size_t times = DEFAULT_MULTIPLICATION) noexcept(false)
     {
         if (new_capacity > capacity_)
         {
-            T* new_buffer = Allocator::allocate(new_capacity);
+            T* new_buffer = Allocator::allocate(new_capacity * times);
 
             if (typeBufferArrayPtr_ == nullptr)
             {
